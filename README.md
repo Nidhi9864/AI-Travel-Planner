@@ -1,7 +1,5 @@
 # AI-Travel-Planner
 
-# 🌍 AI Travel Planner
-
 AI Travel Planner is an AI-based travel planning application that helps users create personalized travel plans according to their interests, budget, available time, and travel preferences.
 
 Planning a trip usually requires searching for places to visit, activities to do, hotels to stay in, and transportation options. Our application brings these things together in one place and uses AI to create a suitable travel plan for the user.
