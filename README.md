@@ -366,45 +366,6 @@ The team will use:
 
 ---
 
-# 📁 Planned Repository Structure
-
-```text
-ai-travel-planner/
-│
-├── frontend/
-│   ├── components/
-│   ├── pages/
-│   ├── services/
-│   └── ...
-│
-├── backend/
-│   ├── api/
-│   ├── models/
-│   ├── services/
-│   ├── ai/
-│   ├── recommendations/
-│   ├── planning/
-│   └── tests/
-│
-├── docs/
-│   ├── requirements/
-│   ├── architecture/
-│   ├── database/
-│   ├── api/
-│   └── sprints/
-│
-├── .github/
-│   ├── workflows/
-│   └── ...
-│
-├── README.md
-└── .gitignore
-```
-
-The exact structure may change as development progresses.
-
----
-
 # 🚀 Development Roadmap
 
 The project will be developed incrementally.
