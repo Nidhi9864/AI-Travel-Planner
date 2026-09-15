@@ -539,32 +539,6 @@ Validate the final travel plan
 
 ---
 
-# 📄 Software Engineering Deliverables
-
-Along with the application, the project will maintain documentation and artifacts related to the Software Engineering process, including:
-
-* Stakeholder analysis
-* Requirement elicitation results
-* Functional requirements
-* Non-functional requirements
-* Domain requirements
-* User stories
-* Acceptance criteria
-* EPICs
-* Product backlog
-* Sprint plans
-* Sprint reports
-* Architecture documentation
-* Database design
-* API documentation
-* Testing documentation
-* Risk analysis
-* GitHub development history
-* Project poster
-* Final project documentation
-
----
-
 # 👨‍💻 Project Status
 
 **Status:** 🚧 In Development / Planning Phase
