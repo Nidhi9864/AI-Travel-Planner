@@ -405,3 +405,101 @@ To verify that the work is divided cleanly according to the defined model—**3 
 | **Overall Project Effort** | **25.0%** | **25.0%** | **25.0%** | **25.0%** | **100.0% Balanced Across Project** |
 | **Primary Code Ownership** | `app/ai/`, `core/config.py`, `services/transport*`, `services/validation*` | `models/user*`, `core/security.py`, `db/`, `services/budget*`, `services/export*` | `models/trip*`, `domain/route*`, `integrations/places*`, `services/verification*` | `Dockerfile*`, `docker-compose*`, `.github/workflows/deploy.yml`, `nginx/`, `docs/deployment/` | **100% Backend & Deployment Stack** |
 | **Test Ownership** | AI prompt/validator tests, Transport tests, Schedule tests | Auth tests, DB session tests, Cost tests, Export tests | Trip tests, Places tests, 2-opt optimizer tests, Customization | Automated CI/CD test runner, Secret scan suite, Live smoke test suite | **100% Offline & Live Test Coverage** |
+
+
+
+## 14. Deployment Architecture (AWS)
+
+### 14.1 Overview
+
+The AI Travel Planner is planned to be deployed on Amazon Web Services (AWS). Deployment will be carried out during **Sprint 5**, subject to the project evaluation requirements. The deployment will focus on hosting the frontend, backend API, and PostgreSQL database while ensuring secure communication, configuration management, monitoring, and reliable application functionality.
+
+### 14.2 AWS Services
+
+| AWS Service | Purpose |
+|---|---|
+| **Amazon S3** | Stores the production build of the React + Vite frontend. |
+| **Amazon CloudFront** | Distributes frontend content securely over HTTPS and routes API requests to the backend origin. |
+| **Amazon EC2** | Hosts the FastAPI backend application inside a Docker container. |
+| **PostgreSQL** | Stores user accounts, trips, itineraries, route information, and budget-related data. The hosting option is under consideration. |
+| **AWS Systems Manager Parameter Store** | Stores sensitive configuration values and application secrets securely. |
+| **Amazon CloudWatch** | Collects application and infrastructure logs and metrics to support monitoring and troubleshooting. |
+| **AWS Budgets** | Helps monitor AWS spending and configure cost alerts. |
+
+### 14.3 Deployment Architecture
+
+The application will use a frontend-backend architecture in which the frontend is delivered through CloudFront, API requests are handled by FastAPI on EC2, and application data is stored in PostgreSQL.
+
+```mermaid
+flowchart TD
+    U[User Browser] --> CF[Amazon CloudFront]
+    CF --> S3[Amazon S3 - React + Vite Frontend]
+    CF --> API[FastAPI Backend - Docker on EC2]
+    API --> DB[(PostgreSQL Database)]
+    API --> PS[AWS Systems Manager Parameter Store]
+    API --> CW[Amazon CloudWatch]
+    AWS[AWS Budgets] -. Cost Alerts .-> Owner[Project Team]
+```
+
+*Note: The PostgreSQL hosting approach and final AWS configuration will be confirmed before deployment.*
+
+### 14.4 Application Request Flow
+
+1. The user opens the application through the CloudFront distribution URL.
+2. CloudFront delivers the frontend files stored in Amazon S3.
+3. When the user performs an action, such as logging in or creating a trip, the frontend sends an API request to the FastAPI backend.
+4. CloudFront forwards configured API requests to the backend hosted on Amazon EC2.
+5. The backend validates the request, applies application rules, and communicates with PostgreSQL to read or update data.
+6. The backend returns the response to the frontend, which updates the user interface.
+7. Application logs and infrastructure metrics are monitored through Amazon CloudWatch.
+
+### 14.5 Database Hosting Decision
+
+PostgreSQL will be used as the application's database. The final hosting option has not yet been selected.
+
+The following options are under consideration:
+
+- **Amazon RDS for PostgreSQL:** A managed database service that reduces the operational work required for database maintenance.
+- **PostgreSQL on Amazon EC2:** A self-managed database hosted on an EC2 instance, requiring the project team to handle maintenance, backups, and database security.
+
+The final decision will depend on deployment requirements, expected workload, operational complexity, and project budget.
+
+### 14.6 Security and Configuration
+
+The deployment will follow these security practices:
+
+- Serve the application over HTTPS.
+- Keep backend secrets and external API credentials out of frontend code and the source repository.
+- Use AWS Systems Manager Parameter Store to store sensitive configuration values, such as `DATABASE_URL`, `SECRET_KEY`, `GEMINI_API_KEY`, `GOOGLE_MAPS_API_KEY`, and `AMADEUS_API_KEY`, as encrypted `SecureString` parameters where appropriate.
+- Attach an IAM role to the EC2 instance with permission to retrieve only the required parameters.
+- Use the **Boto3 AWS SDK** in the FastAPI backend to retrieve secrets from Parameter Store. Boto3 will access AWS services using the EC2 instance's IAM role rather than hardcoded AWS credentials.
+- Pass the retrieved `GEMINI_API_KEY` to the Google Gen AI SDK (`google-genai`) on the backend when making Gemini API requests. Secret values must never be returned to the frontend.
+- Restrict access to the backend and database to the required network paths.
+- Configure the database so it is not publicly accessible.
+- Apply appropriate AWS permissions and security group rules.
+- Scan Git history and configuration files for exposed credentials using tools such as TruffleHog or `git-secrets`.
+- Verify that passwords, API keys, and JWT tokens are not exposed in application logs or production build files.
+
+### 14.7 Monitoring and Cost Management
+
+Amazon CloudWatch will be used to review application logs, infrastructure metrics, and deployment-related issues. AWS Budgets will help the project team monitor spending and configure cost notifications.
+
+Monitoring and cost controls will be reviewed during deployment testing and final project validation.
+
+### 14.8 Deployment Testing
+
+Before the deployment is considered complete, the team will perform the following checks:
+
+- Verify that the frontend loads correctly over HTTPS.
+- Test frontend-to-backend API communication.
+- Validate registration, login, trip creation, editing, and deletion.
+- Confirm PostgreSQL connectivity and data persistence.
+- Test itinerary generation, map visualization, route optimization, budget validation, customization, and PDF export.
+- Verify error handling for unavailable external services and invalid responses.
+- Check authentication, access permissions, configuration security, and responsive browser behavior.
+- Verify that the backend can retrieve required secrets using its IAM role and that secret values are not exposed in logs or frontend files.
+- Perform end-to-end regression testing of the complete user workflow.
+
+### 14.9 Deployment Deliverable
+
+The deployment deliverable is a fully integrated and tested AI Travel Planner, hosted on AWS if deployment is required for evaluation. The deployed application should support the core user workflow, secure data access, monitoring, and a presentation-ready demonstration.
