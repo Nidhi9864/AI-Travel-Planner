@@ -1045,16 +1045,6 @@ Makes the complete application stable, reliable and ready for demonstration and 
 
 **Deliverable:** A fully integrated and tested AI Travel Planner with PDF export, complete core functionality, project documentation and a presentation-ready demonstration.
 
-### 13.3 Project-wide workload matrix
-
-| Sprint | Frontend & UI/UX | Backend & database | DevOps & deployment | QA & verification |
-| :---: | :--- | :--- | :--- | :--- |
-| **Sprint 1** | React/Vite shell, Tailwind tokens, Auth pages (`Login`, `Signup`), `TripForm` wizard, `MyTrips` list. | Core shell, config, exceptions, logging, health; user model, Argon2, JWT, DB session pool; trip model, CHECK rules, trip CRUD, Alembic base. | Local Docker Compose, PostgreSQL 15 container, env templates, cloud research. | Form validation tests, auth integration tests (`test_auth.py`), trip isolation tests (`test_trips.py`). |
-| **Sprint 2** | Generation status page with polling, multi-day itinerary timeline, provenance badges, fallback callout. | Gemini SDK client, prompt builder, AI loop, JSON validator; itinerary models, eager joins, atomic persist, cost calc; Places adapter, verification service, fallbacks, schemas. | CI secret isolation, offline mock JSON fixtures (`gemini_responses.json`), container specs. | Output validator unit tests, API outage and 429 rate-limit injection tests (`test_itineraries.py`). |
-| **Sprint 3** | Google Maps embed, sequence marker pins, route polylines, transport drawer, accommodation list. | Amadeus adapter, ground transit, transport API, Haversine; Routes API adapter, routing service, route cache table; 2-opt route optimizer, cluster logic, optimization API. | Staging database setup, automated performance benchmark scripts for route optimization. | Visual map regression tests, 2-opt route solver unit tests, route calculation tests (`test_routing.py`). |
-| **Sprint 4** | Financial dashboard, budget alert banners (80%/100%), dnd-kit drag-and-drop customization, PDF trigger. | Schedule validator, opening hours check, AI alternatives; cost calculator, budget service, ReportLab PDF engine; customization CRUD, alternative replace, atomic pipeline. | ReportLab C-dependencies in container, DB concurrency locking, production build manifests. | DnD interaction tests, budget threshold boundary tests, PDF failure isolation tests (`test_export.py`). |
-| **Sprint 5** | Production bundle optimization (<2s load), responsive hardening, WCAG AA a11y audit, ErrorBoundary. | Resiliency tuning, AI parallelization, security audit, API contract publication, live cloud endpoint verification. | Multi-stage Docker, cloud hosting, CI/CD pipeline, production DB, SSL/TLS, Nginx, secrets audit, live smoke tests. | Full E2E regression suite, performance SLA audit (<2s reads, <30s generation, <5s routes), security sign-off. |
-
 ### Administrator features
 
 The administrator stories (US-15 to US-17) are not listed in any sprint deliverable. They are built after the sprint items above if time allows, in this order: account management (US-15), flagged itineraries and feedback (US-16), reference data (US-17). Until then the `administrator` role exists in the data model and admin endpoints return access denied to non-administrators.
