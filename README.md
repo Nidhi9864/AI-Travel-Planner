@@ -1,3 +1,4 @@
+[Uploading FINAL_README.md…]()
 # AI Travel Planner
 
 AI Travel Planner suggests travel itineraries based on a traveler's interests, budget and available time. It builds an AI-curated day-wise plan, recommends local activities, generates a plan that fits a stated budget, and lists the transport options (flight, train, bus and cab) and hotels for the trip.
@@ -131,7 +132,7 @@ Departure city and special requirements are optional additions to the core input
 8. Recommended places are verified against real-world location data. A place that cannot be found is replaced with a verified fallback or flagged as unverified.
 9. The backend optimizes the order of activities, calculates distances and travel times, estimates costs and compares the total with the budget.
 10. The dashboard shows the itinerary, map, transport comparison, costs, budget status and data labels.
-11. The user customizes the itinerary. After every change the backend revalidates the schedule, recalculates routes and updates costs (FR-40).
+11. The user customizes the itinerary. After every change the backend revalidates the schedule, recalculates routes and updates costs (FR-20).
 12. If the estimate exceeds the budget or the alert threshold, the user sees the overrun and lower-cost alternatives.
 13. The user can edit the trip preferences and regenerate the itinerary. Routes and costs are recalculated for the new itinerary.
 14. The user saves, reopens or deletes itineraries from My Trips, and exports the latest saved itinerary as a PDF.
@@ -143,87 +144,135 @@ The requirements below are final. Section 13 maps them onto the five sprints.
 
 ### 4.1 Functional requirements
 
+> Merged requirements are noted in parentheses to show which original items were consolidated.
+
+#### Authentication
+
 | ID | Requirement | Sprint |
 | --- | --- | --- |
-| FR-01 | The system shall allow users to register for an account. | 1 |
-| FR-02 | The system shall allow registered users to log in securely. | 1 |
-| FR-03 | The system shall allow users to create a new trip. | 1 |
-| FR-04 | The system shall allow users to select a destination for their trip. | 1 |
-| FR-05 | The system shall allow users to specify the travel start date and duration. | 1 |
-| FR-06 | The system shall allow users to specify the number of travelers. | 1 |
-| FR-07 | The system shall allow users to enter a total trip budget. | 1 |
-| FR-08 | The system shall allow users to select their travel interests. | 1 |
-| FR-09 | The system shall allow users to select a travel style, such as fast-paced or relaxed. | 1 |
-| FR-10 | The system shall allow users to save generated itineraries. | 2 |
-| FR-11 | The system shall allow users to view their saved itineraries. | 2 |
-| FR-12 | The system shall allow users to edit trip details. | 1 |
-| FR-13 | The system shall allow users to delete saved itineraries. | 2 |
-| FR-14 | The system shall generate an itinerary using the user's trip details and preferences. | 2 |
-| FR-15 | The system shall organize the generated itinerary day-wise according to the trip duration. | 2 |
-| FR-16 | The system shall recommend activities and attractions based on the destination and the user's interests. | 2 |
-| FR-17 | The system shall estimate the total cost of the planned trip. | 2 |
-| FR-18 | The system shall validate AI-generated itineraries against the system's defined itinerary rules. | 2 |
-| FR-19 | The system shall validate AI-generated output against a predefined structured data format. | 2 |
-| FR-20 | The system shall provide alternative verified recommendations when a suggested place cannot be found or verified. | 2 |
-| FR-21 | The system shall display itinerary activities on an interactive map. | 3 |
-| FR-22 | The system shall calculate the distance between consecutive itinerary stops. | 3 |
-| FR-23 | The system shall estimate travel time between consecutive itinerary stops. | 3 |
-| FR-24 | The system shall verify recommended places against real-world location data. | 2, 3 |
-| FR-25 | The system shall optimize activity routes to reduce unnecessary travel and backtracking. | 3 |
-| FR-26 | The system shall recalculate routes when itinerary activities are added, removed, or reordered. | 3, 4 |
-| FR-27 | The system shall recommend suitable transportation options for travel between activities. | 3 |
-| FR-28 | The system shall compare available transportation options based on supported criteria, such as estimated travel time and cost. | 3 |
-| FR-29 | The system shall track estimated trip spending against the user's specified budget. | 4 |
-| FR-30 | The system shall notify users when estimated spending exceeds the budget or a defined budget threshold is reached. | 4 |
-| FR-31 | The system shall display a category-wise breakdown of estimated trip expenses. | 4 |
-| FR-32 | The system shall allow users to add activities to an itinerary manually. | 4 |
-| FR-33 | The system shall allow users to remove activities from an itinerary manually. | 4 |
-| FR-34 | The system shall allow users to reorder activities within an itinerary. | 4 |
-| FR-35 | The system shall validate activity durations and scheduling feasibility. | 4 |
-| FR-36 | The system shall detect and prevent overlapping scheduled activities. | 4 |
-| FR-37 | The system shall validate planned activities against available opening-hours information. | 4 |
-| FR-38 | The system shall check whether the estimated trip cost satisfies the user's budget constraint. | 4 |
-| FR-39 | The system shall allow users to export their itineraries as PDF files. | 4, 5 |
-| FR-40 | The system shall preserve itinerary consistency by integrating activity scheduling, budget validation, and route recalculation after itinerary modifications. | 4 |
+| FR-01 | The system shall allow users to register for an account with a unique email address and a validated password. | 1 |
+| FR-02 | The system shall allow registered users to log in with their email and password; error messages shall not reveal which credential was incorrect. | 1 |
+
+#### Trip management
+
+| ID | Requirement | Sprint |
+| --- | --- | --- |
+| FR-03 | The system shall allow users to create a trip by providing: destination, optional departure city, travel start date, duration in days, number of travelers (≥ 1), total budget with currency and selected cost categories, interests (at least one), travel style (relaxed or fast-paced), transport preferences, accommodation preferences, and optional special requirements. *(consolidates former FR-03 to FR-09)* | 1 |
+| FR-04 | The system shall allow users to view, edit and delete their saved trips, and shall restrict access so that a user can only manage their own trips. *(consolidates former FR-12 and trip-level parts of FR-11/FR-13)* | 1 |
+
+#### Itinerary generation
+
+| ID | Requirement | Sprint |
+| --- | --- | --- |
+| FR-05 | The system shall generate a complete, day-wise itinerary using an AI model based on the user's trip details and preferences. *(consolidates former FR-14 and FR-15)* | 2 |
+| FR-06 | The system shall recommend activities and attractions for each day that are relevant to the destination and match at least one of the user's stated interests. | 2 |
+| FR-07 | The system shall validate AI-generated output against both a predefined JSON schema and the system's domain rules before accepting it; if validation fails the system shall retry with the failure reasons as feedback and reject the output if it cannot be corrected within the retry limit. *(consolidates former FR-18 and FR-19)* | 2 |
+| FR-08 | The system shall verify every recommended place against real-world location data; if a place cannot be verified the system shall substitute a verified fallback that matches the user's interests; places that cannot be replaced shall be flagged as unverified. *(consolidates former FR-24 and FR-20)* | 2 |
+
+#### Itinerary persistence
+
+| ID | Requirement | Sprint |
+| --- | --- | --- |
+| FR-09 | The system shall allow users to save, view and delete generated itineraries; only itineraries that passed full validation shall be saved as successful. *(consolidates former FR-10, FR-11 and FR-13)* | 2 |
+| FR-10 | The system shall allow users to edit their trip preferences and regenerate a new itinerary version; previously saved itineraries shall remain available. | 2 |
+
+#### Map and routes
+
+| ID | Requirement | Sprint |
+| --- | --- | --- |
+| FR-11 | The system shall display itinerary activities as markers on an interactive map, draw the optimized daily route between them, and clearly indicate any location that is unverified or unavailable. | 3 |
+| FR-12 | The system shall calculate the distance and estimated travel time between consecutive itinerary stops for each supported transport mode, and cache results to avoid redundant calls. *(consolidates former FR-22 and FR-23)* | 3 |
+| FR-13 | The system shall optimize the order of daily activities to minimize total travel time and backtracking, and shall recalculate the optimized route and travel-time estimates after any activity is added, removed or reordered. *(consolidates former FR-25 and FR-26)* | 3 |
+
+#### Transport and accommodation
+
+| ID | Requirement | Sprint |
+| --- | --- | --- |
+| FR-14 | The system shall present available transportation options (flights, trains, buses and estimated cab fares) and compare them by estimated cost and travel time; each option shall be labeled with its data status. *(consolidates former FR-27 and FR-28)* | 3 |
+| FR-15 | The system shall display available accommodation options for the destination with estimated costs and booking links where available. | 3 |
+
+#### Budget
+
+| ID | Requirement | Sprint |
+| --- | --- | --- |
+| FR-16 | The system shall calculate and display the estimated total trip cost, a planned daily budget, and a breakdown by selected cost categories (accommodation, transport, activities, food). *(consolidates former FR-17, FR-29 and FR-31)* | 2, 4 |
+| FR-17 | The system shall alert the user when estimated spending reaches 80 % of the budget and when it exceeds the budget in full; a missing price shall never be counted as zero and shall instead mark the total as provisional. *(consolidates former FR-30 and FR-38)* | 4 |
+
+#### Itinerary customization
+
+| ID | Requirement | Sprint |
+| --- | --- | --- |
+| FR-18 | The system shall allow users to manually add, remove and reorder activities within an itinerary, and to replace any activity with an AI-suggested or manually selected alternative. *(consolidates former FR-32, FR-33 and FR-34)* | 4 |
+| FR-19 | The system shall validate the itinerary schedule after every modification: activity durations must be positive; no two activities may overlap; each activity must be reachable from the previous one given the travel time; activities must fall within available opening hours where data exists (missing hours are never assumed to be open); all activities must fit within the trip's travel dates. *(consolidates former FR-35, FR-36 and FR-37)* | 4 |
+| FR-20 | The system shall apply schedule revalidation, route recalculation and budget recalculation as a single atomic operation after every itinerary modification, and shall preserve the last valid itinerary state if the modification produces a conflict. *(refines former FR-40)* | 4 |
+
+#### Export
+
+| ID | Requirement | Sprint |
+| --- | --- | --- |
+| FR-21 | The system shall allow users to export their itinerary as a PDF file containing the day-wise schedule and cost summary; a PDF generation failure shall leave the saved itinerary unchanged. | 4, 5 |
 
 ### 4.2 Non-functional requirements
 
+> Merged requirements are noted in parentheses.
+
+#### Performance
+
 | ID | Requirement |
 | --- | --- |
-| NFR-01 | The system shall load standard application pages within 3 seconds under normal operating conditions. |
-| NFR-02 | The system shall return saved itinerary details within 2 seconds under normal operating conditions. |
-| NFR-03 | The system shall aim to generate a complete AI itinerary within 30 seconds under normal operating conditions, excluding exceptional third-party service delays. |
-| NFR-04 | The system shall recalculate an itinerary's routes within 5 seconds after a user modification for a typical trip. |
-| NFR-05 | The system shall protect user credentials using secure password hashing and shall not store passwords in plaintext. |
-| NFR-06 | The system shall restrict access to private trip data to authorized users. |
-| NFR-07 | The system shall validate and sanitize user inputs to reduce the risk of injection and other input-based attacks. |
-| NFR-08 | The system shall use encrypted connections when transmitting sensitive user data. |
-| NFR-09 | The system shall protect API keys and other secrets from exposure in client-side code and public repositories. |
-| NFR-10 | The system shall handle AI-service and external API failures gracefully without crashing the application. |
-| NFR-11 | The system shall display an appropriate error message when itinerary generation fails. |
-| NFR-12 | The system shall preserve saved itinerary data when an external service becomes temporarily unavailable. |
-| NFR-13 | The system shall avoid saving incomplete or invalid itinerary data as a successfully generated itinerary. |
-| NFR-14 | The system shall provide a clear and consistent interface for creating, viewing, and editing trips. |
-| NFR-15 | The system shall display itinerary activities in a readable day-wise format. |
-| NFR-16 | The system shall provide clear feedback when an itinerary is generated, saved, edited, exported, or when an operation fails. |
-| NFR-17 | The system shall present budget information, travel distances, and estimated travel times in understandable formats. |
-| NFR-18 | The system shall allow users to complete the main trip-planning workflow without requiring technical knowledge of AI systems. |
-| NFR-19 | The system shall validate AI-generated itinerary data before presenting it as a finalized itinerary. |
-| NFR-20 | The system shall use real-world location data to verify recommended places and their geographic coordinates. |
-| NFR-21 | The system shall calculate trip budgets, distances, and travel-time estimates consistently using the available input data. |
-| NFR-22 | The system shall clearly identify estimated costs and travel times as estimates rather than guaranteed values. |
-| NFR-23 | The system shall use available opening-hours information without treating missing or unavailable data as confirmed opening hours. |
-| NFR-24 | The system shall use a modular architecture that separates user management, itinerary generation, route processing, and budget management. |
-| NFR-25 | The system shall allow individual components to be updated without requiring unnecessary changes to unrelated components. |
-| NFR-26 | The system shall maintain clear and consistent naming conventions and documentation for its code and APIs. |
-| NFR-27 | The system shall support adding more destinations, activities, and transportation options without requiring a complete system redesign. |
-| NFR-28 | The system shall function on commonly used modern web browsers, including Chrome, Firefox, Edge, and Safari. |
-| NFR-29 | The user interface shall adapt to desktop, tablet, and mobile screen sizes. |
-| NFR-30 | The system shall provide PDF exports that can be opened using standard PDF readers. |
-| NFR-31 | The system shall maintain consistency between saved itinerary details and the activities displayed to the user. |
-| NFR-32 | The system shall validate trip dates, traveler counts, budget values, and activity schedules before processing them. |
-| NFR-33 | The system shall ensure that itinerary modifications trigger the required updates to routes, schedules, and budget estimates. |
-| NFR-34 | The system shall prevent unauthorized users from modifying or deleting another user's private itineraries. |
+| NFR-01 | Standard application pages shall load within 3 seconds under normal operating conditions. |
+| NFR-02 | Saved itinerary reads shall return a response within 2 seconds under normal operating conditions. |
+| NFR-03 | AI itinerary generation shall complete within 30 seconds under normal conditions, excluding unrecoverable third-party delays. |
+| NFR-04 | Route recalculation shall complete within 5 seconds after any user modification for a typical trip, aided by route caching. |
+
+#### Security
+
+| ID | Requirement |
+| --- | --- |
+| NFR-05 | Passwords shall be hashed with Argon2 and never stored, logged or transmitted in plain text. |
+| NFR-06 | Access to trip and itinerary data shall be restricted to the authenticated owner; a request for another user's resource shall return not-found rather than forbidden, to avoid leaking the existence of private data. *(consolidates former NFR-06 and NFR-34)* |
+| NFR-07 | All user inputs shall be validated by schema (Pydantic on the backend, Zod on the frontend) and all database queries shall use bound parameters; free-text inputs shall be length-limited and sanitized before use in AI prompts. *(consolidates former NFR-07 and NFR-32)* |
+| NFR-08 | All data transmission shall use HTTPS; the CORS policy shall restrict cross-origin requests to the configured frontend origin only. |
+| NFR-09 | API keys and secrets shall be stored exclusively in server-side environment variables; the only value permitted in client-side code is the Google Maps browser key, restricted by HTTP referrer and API type. |
+
+#### Resilience
+
+| ID | Requirement |
+| --- | --- |
+| NFR-10 | When an AI service or external API fails, the system shall retry a bounded number of times with exponential backoff, fall back to cached or estimated data where appropriate, and keep the application and all saved data intact throughout. *(consolidates former NFR-10, NFR-12 and NFR-13)* |
+| NFR-11 | When generation or an external operation fails, the system shall display a clear, non-technical error message with a retry option; it shall never save an incomplete or invalid result as a successful itinerary. *(consolidates former NFR-11 and NFR-13)* |
+
+#### Usability
+
+| ID | Requirement |
+| --- | --- |
+| NFR-12 | The interface shall provide a clear and consistent layout for all pages, display itinerary activities in a readable day-wise format, and present budget totals, distances and travel times in human-readable units. *(consolidates former NFR-14, NFR-15 and NFR-17)* |
+| NFR-13 | The system shall provide immediate, contextual feedback for every significant user action (generation, save, edit, export, failure) and shall allow users to complete the full trip-planning workflow without requiring knowledge of AI systems. *(consolidates former NFR-16 and NFR-18)* |
+
+#### Data quality
+
+| ID | Requirement |
+| --- | --- |
+| NFR-14 | Every cost estimate, travel time and place availability status shall be labeled with its data provenance (Verified, Cached, Estimated, Unverified or Unavailable); estimates shall never be presented as guaranteed values, and missing data shall never be assumed to be zero or open. *(consolidates former NFR-21, NFR-22 and NFR-23)* |
+
+#### Maintainability and extensibility
+
+| ID | Requirement |
+| --- | --- |
+| NFR-15 | The backend shall use a modular, layered architecture (API, services, domain, repositories, integrations) that separates user management, itinerary generation, route processing and budget management; each external provider shall be accessed through an adapter interface so providers, destinations and activity types can be added or replaced without redesigning unrelated components. *(consolidates former NFR-24, NFR-25 and NFR-27)* |
+| NFR-16 | The codebase shall maintain clear, consistent naming conventions and inline documentation; APIs shall be described in a versioned contract document. *(refines former NFR-26)* |
+
+#### Data integrity
+
+| ID | Requirement |
+| --- | --- |
+| NFR-17 | The itinerary and all its dependent records (days, items, cost items, route legs) shall be written and updated in a single database transaction; every modification shall trigger schedule revalidation, route recalculation and budget update before the response is returned, and the last valid itinerary state shall always be preserved on rejection. *(consolidates former NFR-31 and NFR-33)* |
+
+#### Compatibility
+
+| ID | Requirement |
+| --- | --- |
+| NFR-18 | The application shall function on modern versions of Chrome, Firefox, Edge and Safari; the user interface shall adapt to desktop, tablet and mobile screen sizes; exported PDFs shall open in standard PDF readers. *(consolidates former NFR-28, NFR-29 and NFR-30)* |
 
 ### 4.3 User stories
 
@@ -411,15 +460,15 @@ Domain rules are enforced in backend code and covered by tests. A prompt to the 
 
 | ID | Rule | Related requirements | Enforcement |
 | --- | --- | --- | --- |
-| DR-01 | Respect opening hours | FR-37, NFR-23, US-13 | Check opening hours from the source where reliable. Mark unknown hours explicitly and never treat them as confirmed. |
-| DR-02 | Recommend activities relevant to the selected interests | FR-16 | Check each activity against the selected interests. |
-| DR-03 | Account for the user's budget | FR-17, FR-29, FR-38 | Calculate the estimated cost and run the budget decision. |
-| DR-04 | Avoid overlapping activities | FR-36 | Compare activity start and end intervals and reject conflicts. |
-| DR-05 | Respect trip dates and duration | FR-15, FR-35, NFR-32 | Keep the schedule inside the user's travel dates and the itinerary length equal to the trip duration. |
-| DR-06 | Account for travel time between locations | FR-23, FR-35 | Use route and time estimates and reject impossible transitions. |
-| DR-07 | Aggregate costs by the categories the user selected | FR-31, US-07 | Include only selected categories in the total. |
-| DR-08 | Unverified data is not shown as confirmed | FR-24, NFR-20, NFR-23, US-13 | Places, availability and schedules need a Verified label to be shown as confirmed. |
-| DR-09 | Revalidate after a date change | FR-12, US-08 | Date-dependent schedule and cost data is rechecked before the itinerary is shown as current. |
+| DR-01 | Respect opening hours | FR-19, NFR-14, US-13 | Check opening hours from the source where reliable. Mark unknown hours explicitly and never treat them as confirmed. |
+| DR-02 | Recommend activities relevant to the selected interests | FR-06 | Check each activity against the selected interests. |
+| DR-03 | Account for the user's budget | FR-16, FR-17 | Calculate the estimated cost and run the budget decision. |
+| DR-04 | Avoid overlapping activities | FR-19 | Compare activity start and end intervals and reject conflicts. |
+| DR-05 | Respect trip dates and duration | FR-05, FR-19, NFR-07 | Keep the schedule inside the user's travel dates and the itinerary length equal to the trip duration. |
+| DR-06 | Account for travel time between locations | FR-12, FR-19 | Use route and time estimates and reject impossible transitions. |
+| DR-07 | Aggregate costs by the categories the user selected | FR-16, US-07 | Include only selected categories in the total. |
+| DR-08 | Unverified data is not shown as confirmed | FR-08, NFR-14, US-13 | Places, availability and schedules need a Verified label to be shown as confirmed. |
+| DR-09 | Revalidate after a date change | FR-04, FR-10, US-08 | Date-dependent schedule and cost data is rechecked before the itinerary is shown as current. |
 
 ## 5. Failure handling
 
@@ -457,7 +506,7 @@ estimated_total =
 planned_daily_budget = total_budget / number_of_days
 ```
 
-Only categories the user selected are included. Each cost item records its amount (if known), currency, category, source or status, and whether it is included. Amounts in different currencies are not added without a reliable conversion source. A missing price is never treated as zero. All costs and travel times are shown as estimates (NFR-22).
+Only categories the user selected are included. Each cost item records its amount (if known), currency, category, source or status, and whether it is included. Amounts in different currencies are not added without a reliable conversion source. A missing price is never treated as zero. All costs and travel times are shown as estimates (NFR-14).
 
 ### Budget status
 
@@ -498,7 +547,7 @@ For each day the backend groups activities by geographic proximity, then orders 
 
 The system is a modular monolith: a React single-page frontend talking to a FastAPI backend over a versioned REST API, with PostgreSQL for storage. The AI model is a proposal generator. External data and backend domain rules decide what can be presented as a practical itinerary.
 
-The backend is split into separate modules for user management, itinerary generation, route processing and budget management (NFR-24). Each external provider sits behind an adapter, so none is tied to a specific vendor and new destinations, activities or transport sources can be added without a redesign (NFR-25, NFR-27). The AI model is called through a common LLM interface so the provider can be replaced with minimal changes (US-20).
+The backend is split into separate modules for user management, itinerary generation, route processing and budget management. Each external provider sits behind an adapter, so none is tied to a specific vendor and new destinations, activities or transport sources can be added without a redesign (NFR-15). The AI model is called through a common LLM interface so the provider can be replaced with minimal changes (US-20).
 
 ### Frontend
 
@@ -651,70 +700,157 @@ Some paths are created when the sprint that needs them begins.
 
 ```text
 ai-travel-planner/
-├── README.md
-├── .gitignore
-├── .env.example
-├── docker-compose.yml                 # local PostgreSQL
-├── docs/
-│   ├── requirements/
-│   ├── api/api-contract.md
-│   └── decisions/architecture-decisions.md
-├── frontend/
-│   ├── package.json
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── .env.example
+├── .env.example                               # Root environment variables template
+├── .gitignore                                 # Git ignore patterns
+├── docker-compose.yml                         # PostgreSQL 15 local database service definition
+├── PROJECT_FILES_README.md                    # File-by-file functionality reference manual
+├── README.md                                  # Primary project overview and specification
+├── docs/                                      # Engineering and architecture documentation
+│   ├── api/
+│   │   └── api-contract.md                    # Formal OpenAPI/REST endpoint contract definitions
+│   ├── decisions/
+│   │   └── architecture-decisions.md          # Architecture Decision Records (ADRs)
+│   └── requirements/
+│       └── requirements.md                    # Supplementary requirements and validation matrices
+├── scripts/                                   # Root developer convenience execution scripts
+│   ├── dev-backend.sh                         # Script to launch FastAPI with Uvicorn hot-reload
+│   └── dev-frontend.sh                        # Script to launch Vite development server
+├── frontend/                                  # React 18 + Vite SPA Single-Page Application
+│   ├── .env.example                           # Frontend environment configuration template
+│   ├── index.html                             # HTML entry point and application container
+│   ├── package.json                           # NPM dependencies and build scripts
+│   ├── vite.config.js                         # Vite build configuration and proxy setup
 │   └── src/
-│       ├── main.jsx
-│       ├── App.jsx
-│       ├── routes/                    # AppRoutes, ProtectedRoute
-│       ├── pages/                     # Landing, Login, Signup, MyTrips, TripForm, ReviewTrip,
-│       │                              # GenerationStatus, ItineraryDashboard, EditItinerary,
-│       │                              # admin/
-│       ├── components/                # layout, trip-form, itinerary, map, budget, common
-│       ├── hooks/
+│       ├── App.jsx                            # Root component configuring providers & routes
+│       ├── main.jsx                           # React DOM rendering entrypoint
+│       ├── components/                        # Reusable modular UI components
+│       │   ├── budget/                        # Budget tracking panels, alerts, breakdowns
+│       │   ├── common/                        # Status badges, toasts, modal dialogs, buttons
+│       │   ├── itinerary/                     # Day-by-day activity cards, timeline renderers
+│       │   ├── layout/                        # Navigation header, footer, app container shells
+│       │   ├── map/                           # Google Maps JavaScript interactive map view
+│       │   └── trip-form/                     # Multi-step wizard inputs and preference selectors
 │       ├── context/
-│       ├── services/                  # apiClient, authService, tripService, itineraryService
-│       ├── schemas/
-│       ├── utils/
-│       └── styles/
-├── backend/
-│   ├── pyproject.toml
-│   ├── alembic.ini
-│   ├── .env.example
-│   ├── alembic/
-│   │   ├── env.py
-│   │   └── versions/
-│   ├── scripts/
-│   │   └── seed_reference_data.py
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── core/                      # config, security, logging, exceptions, rate limiting
-│   │   ├── api/
-│   │   │   ├── deps.py
-│   │   │   └── v1/
-│   │   │       ├── router.py
-│   │   │       └── endpoints/         # health, auth, trips, itineraries, export, admin
-│   │   ├── schemas/
-│   │   ├── models/
-│   │   ├── repositories/
-│   │   ├── services/                  # auth, trip, itinerary, verification, routing,
-│   │   │                              # transport, budget, validation, export, admin
-│   │   ├── ai/                        # base (LLMClient interface), gemini_client, prompts,
-│   │   │                              # generation, alternatives, output_validator
-│   │   ├── integrations/              # base, places, routes, amadeus, ground_transport,
-│   │   │                              # provider_registry
-│   │   ├── domain/                    # rules, schedule_validator, cost_calculator,
-│   │   │                              # route_optimizer
-│   │   └── db/                        # session, base
-│   └── tests/
-│       ├── conftest.py
-│       ├── unit/
-│       ├── integration/
-│       └── fixtures/                  # recorded provider and AI responses
-└── scripts/
-    ├── dev-backend.sh
-    └── dev-frontend.sh
+│       │   └── AuthContext.jsx                # Global authentication state & session provider
+│       ├── hooks/                             # Custom React hooks (useAuth, useItinerary, etc.)
+│       ├── pages/                             # Route-level page views
+│       │   ├── EditItinerary.jsx              # Drag-and-drop customization workspace
+│       │   ├── GenerationStatus.jsx           # AI generation polling and retry interface
+│       │   ├── ItineraryDashboard.jsx         # Primary trip dashboard (Map + Schedule + Budget)
+│       │   ├── Landing.jsx                    # Marketing landing page & sign-in links
+│       │   ├── Login.jsx                      # User login form with credentials validation
+│       │   ├── MyTrips.jsx                    # Saved trip collection & version list
+│       │   ├── ReviewTrip.jsx                 # Pre-generation summary and confirmation
+│       │   ├── Signup.jsx                     # Account registration form
+│       │   ├── TripForm.jsx                   # Multi-step trip preference creator
+│       │   └── admin/
+│       │       └── AdminConsole.jsx           # Administrative management console
+│       ├── routes/                            # Client-side route declarations
+│       │   ├── AppRoutes.jsx                  # Main route mapping table
+│       │   └── ProtectedRoute.jsx             # Authentication guard wrapper
+│       ├── schemas/                           # Zod frontend form validation schemas
+│       ├── services/                          # API client service layer
+│       │   ├── apiClient.js                   # Axios client instance with auth interceptors
+│       │   ├── authService.js                 # Authentication API calls (login, register, me)
+│       │   ├── itineraryService.js            # Itinerary generation, read, mutate, export APIs
+│       │   └── tripService.js                 # Trip CRUD and preference API operations
+│       ├── styles/
+│       │   └── global.css                     # Global design tokens and reset styles
+│       └── utils/                             # Date, currency, and unit formatters
+└── backend/                                   # FastAPI Python Backend Application
+    ├── .env.example                           # Backend secrets and environment variable template
+    ├── alembic.ini                            # Alembic database migration tool configuration
+    ├── pyproject.toml                         # Poetry/Pip dependencies and project metadata
+    ├── alembic/                               # Database migration management
+    │   ├── env.py                             # Alembic runtime environment and model metadata
+    │   └── versions/                          # Linear SQL migration revision scripts
+    ├── scripts/                               # Data seeding and operational scripts
+    │   └── seed_reference_data.py             # Pre-populates sample destinations and categories
+    ├── tests/                                 # Automated test suite
+    │   ├── conftest.py                        # Pytest fixtures, test DB, and client setup
+    │   ├── fixtures/                          # Recorded external provider mock responses
+    │   │   ├── amadeus_responses.json         # Mock flight and hotel responses
+    │   │   ├── gemini_responses.json          # Mock valid and malformed Gemini AI responses
+    │   │   ├── places_responses.json          # Mock Google Places search results
+    │   │   └── routes_responses.json          # Mock Google Routes matrices and distances
+    │   ├── integration/                       # Multi-component integration test suite
+    │   │   ├── test_auth.py                   # User registration, login, token lifecycle
+    │   │   ├── test_customization.py          # Atomic add/remove/reorder/replace pipeline
+    │   │   ├── test_export.py                 # PDF generation and error isolation tests
+    │   │   ├── test_itineraries.py            # AI generation, persistence, ownership
+    │   │   └── test_trips.py                  # Trip CRUD, validation, unauthorized access
+    │   └── unit/                              # Pure function and business domain tests
+    │       ├── test_cost_calculator.py        # Budget aggregation, daily limits, threshold alerts
+    │       ├── test_output_validator.py       # Pydantic schema validation & hallucination checks
+    │       ├── test_route_optimizer.py        # 2-opt heuristic traversal and distance metrics
+    │       ├── test_schedule_validator.py     # Overlap detection, duration, opening-hours logic
+    │       ├── test_security.py               # Argon2 password hashing and JWT encoding
+    │       ├── test_validation.py             # Input boundary conditions and sanitization
+    │       └── test_verification.py           # Place verification and interest fallback selection
+    └── app/                                   # Core application package
+        ├── main.py                            # FastAPI entry point, CORS, lifespan, middleware
+        ├── ai/                                # AI Subsystem & LLM Integration
+        │   ├── alternatives.py                # Activity replacement candidate generator
+        │   ├── base.py                        # Abstract LLMClient interface and exception types
+        │   ├── gemini_client.py               # Google GenAI Gemini implementation with retries
+        │   ├── generation.py                  # Multi-step generation workflow orchestrator
+        │   ├── output_validator.py            # Structured JSON parsing and domain constraint check
+        │   └── prompts.py                     # System prompts, grounded context builders
+        ├── api/                               # HTTP Presentation Layer
+        │   ├── deps.py                        # Dependency injection (get_db, get_current_user)
+        │   └── v1/                            # API Version 1
+        │       ├── router.py                  # Main v1 router aggregating all endpoints
+        │       └── endpoints/                 # REST Resource Endpoints
+        │           ├── admin.py               # Platform administration and system metrics
+        │           ├── auth.py                # Authentication (register, login, session)
+        │           ├── export.py              # Itinerary PDF export endpoint
+        │           ├── health.py              # Liveness and readiness health checks
+        │           ├── itineraries.py         # Generation, retrieval, customization endpoints
+        │           └── trips.py               # Trip resource CRUD endpoints
+        ├── core/                              # Cross-Cutting Infrastructure
+        │   ├── config.py                      # Pydantic Settings reading environment variables
+        │   ├── exceptions.py                  # Custom domain and HTTP exception handlers
+        │   ├── logging.py                     # Structured JSON logging with credential redaction
+        │   ├── rate_limit.py                  # Slowapi request throttling and rate limiting
+        │   └── security.py                    # Argon2 hashing, JWT creation and verification
+        ├── db/                                # Persistence & Session Management
+        │   ├── base.py                        # SQLAlchemy declarative base class
+        │   └── session.py                     # Engine instantiation, connection pool, sessionmaker
+        ├── domain/                            # Pure Business Logic & Domain Engine
+        │   ├── cost_calculator.py             # Spending aggregation, daily splits, threshold checks
+        │   ├── route_optimizer.py             # 2-opt TSP heuristic route optimizer
+        │   ├── rules.py                       # System domain rules DR-01 through DR-09
+        │   └── schedule_validator.py          # Temporal overlap, travel time & opening hour validator
+        ├── integrations/                      # External Provider Adapters
+        │   ├── amadeus.py                     # Amadeus Self-Service API (flights, hotels)
+        │   ├── base.py                        # Base provider interface with bounded retries
+        │   ├── ground_transport.py            # Rail and bus transit fare and timetable adapter
+        │   ├── places.py                      # Google Places API (POI search, coordinates, hours)
+        │   ├── provider_registry.py           # Dynamic runtime registry for external adapters
+        │   └── routes.py                      # Google Routes API (distance, time, polylines)
+        ├── models/                            # SQLAlchemy ORM Database Entities
+        │   ├── itinerary.py                   # Itinerary, ItineraryDay, ItineraryItem, CostItem
+        │   ├── trip.py                        # Trip and TripPreferences models with CHECK constraints
+        │   └── user.py                        # User account model (email, hash, role, timestamps)
+        ├── repositories/                      # Data Access Layer
+        │   ├── itinerary_repository.py        # Itinerary persistence and eager-loading queries
+        │   ├── trip_repository.py             # Trip CRUD queries filtered by authenticated user
+        │   └── user_repository.py             # User retrieval and registration queries
+        ├── schemas/                           # Pydantic Data Contracts & Validation Schemas
+        │   ├── auth.py                        # Login, Registration, Token schemas
+        │   ├── itinerary.py                   # Itinerary structure, items, modifications, export
+        │   └── trip.py                        # Trip creation, update, and preference schemas
+        └── services/                          # Application Service Layer (Use Cases)
+            ├── admin.py                       # Admin auditing and feedback moderation services
+            ├── auth.py                        # Authentication, registration & credential verification
+            ├── budget.py                      # Budget status calculation and alerts
+            ├── export.py                      # ReportLab PDF document compilation service
+            ├── itinerary_service.py           # End-to-end itinerary generation orchestration
+            ├── routing.py                     # Transit routing matrix and caching operations
+            ├── transport.py                   # Multi-modal transport comparison service
+            ├── trip.py                        # Trip management business logic
+            ├── validation.py                  # Itinerary schedule and constraint validation
+            └── verification.py                # Place verification and fallback selection service
 ```
 
 | Directory | Responsibility |
@@ -765,135 +901,322 @@ Run the backend tests with `pytest` from the `backend` directory. Tests use reco
 7. The user exports a PDF and opens it in a standard reader.
 8. The user deletes the itinerary after confirming.
 
-## 13. Scope and sprint plan
+## 13. Project Scope, Multi-Disciplinary Sprints & Team Roles
 
-The project is delivered in five sprints. Each sprint lists its goal, main points, testing and deliverable. The requirement IDs show the main requirements each sprint satisfies. Non-functional requirements apply to every sprint and are checked again in Sprint 5.
+This section governs the planning, ownership, and sprint distribution for the **entire AI Travel Planner project**. While [`Sprint_Work_Distribution.md`](file:///c:/Users/Admin/Desktop/software%20project/Sprint_Work_Distribution.md) provides the deep-dive specification for the backend codebase, this section integrates all software engineering tracks—**Frontend & UI/UX**, **Backend & Data Persistence**, **DevOps, Infrastructure & Deployment**, and **Quality Assurance & Verification**—across five structured, sequential sprints.
 
-### Sprint 1: User authentication and trip management
+### 13.1 Cross-Functional Team Roles & Governance
 
-Builds the foundation of the application, allowing users to securely access the system and manage their trips.
+The project is executed across four specialized engineering tracks with clear division of responsibility:
 
-**Goal:** Implement user authentication and trip management, with all essential trip details stored correctly.
+| Engineering Track | Primary Focus & Specialization | Key Technologies & Modules | Designated Role Leads |
+| :--- | :--- | :--- | :--- |
+| **Backend Feature Engineering (Phase 1: Sprints 1–4)** | Core framework, data models, session pooling, Alembic migrations, AI pipeline orchestration, external provider adapters, geo-spatial optimization, financial calculations, and PDF generation. Divided strictly equally (33.3% each). | FastAPI, PostgreSQL 15, SQLAlchemy 2.0, Alembic, Gemini LLM (`google-genai`), Google Places/Routes, ReportLab, pytest. | **Het** (AI Pipeline & Core Architecture)<br>**Manal** (Security, Auth & Financial Domain)<br>**Jeel** (Trip Domain & Geo-Spatial Optimization) |
+| **DevOps, Infrastructure & Deployment (Phase 2: Sprint 5)** | Local containerization, multi-stage production Docker images, cloud hosting provisioning, automated GitHub Actions CI/CD pipelines, production database setup, SSL/TLS reverse proxy, secret leak auditing, and live smoke testing. | Docker, Docker Compose, Nginx, GitHub Actions, Linux, Cloud Run / ECS / Render, Let's Encrypt SSL, Slowapi / Redis. | **Kirtan** (Production Deployment, Cloud Infrastructure & DevOps Lead — 100% Deployment Work) |
+| **Frontend & UI/UX Engineering** | Modern Single-Page Application (SPA), responsive layout grid, design tokens, interactive trip forms, multi-day itinerary timelines, Google Maps visualization, drag-and-drop customization, financial dashboard, and PDF streaming. | React 18, Vite, Tailwind CSS, `@react-google-maps/api`, `@dnd-kit/core`, Axios, Lucide React, Context API. | **Frontend & UI Engineering Lead** |
+| **Quality Assurance & Verification** | Test automation, unit and integration suites, offline provider mock datasets, end-to-end user journeys, performance SLA benchmarking, accessibility auditing (WCAG AA), and security vulnerability scanning. | Pytest, Vitest / React Testing Library, Mock JSON Fixtures, Postman, TruffleHog / Git-Secrets, Lighthouse. | **QA & System Verification Lead** |
 
-**Main points:**
+---
 
-- User registration and login.
-- Create a trip by entering destination, travel dates or duration, and number of travelers.
-- Set trip budget, interests and preferred travel style (fast-paced or relaxed).
-- Save, view, edit and delete trips and trip details.
-- Store passwords using secure hashing, and validate and sanitize all user inputs.
-- Restrict access to private trip data to the owner.
-- Set up the database and connect it to the frontend and backend.
+### 13.2 Sprint-by-Sprint Multi-Disciplinary Work Distribution
 
-**Implementation notes:** React and Vite shell, landing page and trip form; FastAPI skeleton; PostgreSQL models and the first Alembic migrations through SQLAlchemy; Argon2 and JWT authentication. The trip form also stores the transportation and accommodation preferences (US-04) so later sprints can use them.
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                      PHASE 1: FEATURE ENGINEERING (SPRINTS 1 TO 4)                     │
+├────────────────────────────┬─────────────────────────────┬─────────────────────────────┤
+│   FRONTEND & UI/UX TRACK   │   BACKEND & DATABASE TRACK  │   DEVOPS & QA TRACK         │
+│   • React 18 + Vite SPA    │   • Het: AI & Core Arch     │   • Dev Docker Containers   │
+│   • Tailwind CSS Design    │   • Manal: Auth, DB & Cost  │   • Offline Test Fixtures   │
+│   • Maps JS & Route Canvas │   • Jeel: Trip & Geo-Opt    │   • CI Test Automation      │
+│   • DnD-Kit Customization  │   [Divided Equally: 33.3%]  │   • SLA Benchmarks (<5s)    │
+└────────────────────────────┴──────────────┬──────────────┴─────────────────────────────┘
+                                            │ Feature Freeze & Release Handoff
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│             PHASE 2: PRODUCTION DEPLOYMENT & RELEASE OPERATIONS (SPRINT 5)             │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                       KIRTAN (100% PRODUCTION DEPLOYMENT LEAD)                         │
+│   • Production Multi-Stage Docker Containerization (`Dockerfile.prod`)                 │
+│   • Cloud Infrastructure & Managed PostgreSQL 15 Database Provisioning                 │
+│   • Automated GitHub Actions CI/CD Deployment Pipeline (`.github/workflows/deploy.yml`)│
+│   • Production Secret Store Configuration & Automated Secret Leak Audit                │
+│   • Automated Production Database Migration Hook (`alembic upgrade head`)              │
+│   • Nginx Reverse Proxy with SSL/TLS Termination (HTTPS) & Production CORS             │
+│   • Production Rate Limiting (Slowapi/Redis), Health Probes & Log Monitoring           │
+│   • Automated Post-Deployment Live Smoke Testing & Disaster Recovery Runbook           │
+│                                                                                        │
+│   [Het, Manal, Jeel & Frontend: Post-deployment verification & live feature sign-off]  │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-**Requirements:** FR-01 to FR-09, FR-12; US-01 to US-04; NFR-05 to NFR-07, NFR-14, NFR-32, NFR-34.
+---
 
-**Testing:** Registration and login, input validation, trip creation, editing and deletion, data persistence, and access permissions to ensure users can access only their own trips.
+### Sprint 1: Project Foundation, User Authentication & Trip Management
 
-**Deliverable:** A working application where users can register, log in, create trips and manage their saved trip details.
+*Builds the core foundation across frontend and backend, enabling travelers to register, authenticate securely, and manage trips with database-enforced constraints.*
 
-### Sprint 2: AI-powered itinerary generation
+- **Target Requirements:** FR-01, FR-02, FR-03, FR-04; US-01, US-02, US-03, US-04; NFR-05, NFR-06, NFR-07, NFR-08, NFR-09, NFR-12.
 
-Uses AI to generate personalized, day-wise travel itineraries based on the user's trip details and preferences.
+#### 1. Frontend & UI/UX Track
+- **Application Shell & Layout:** Initialize React 18 + Vite project shell, establish Tailwind CSS typography and design tokens, and build responsive `Navbar.jsx` with dynamic authentication state and `Footer.jsx`.
+- **Authentication Pages:** Implement `Login.jsx` and `Signup.jsx` pages with client-side field validation (email syntax, password complexity, confirm-password matching) and user-friendly error banners.
+- **Client Auth State:** Build `AuthContext.jsx` and `useAuth.js` managing JWT storage in secure cookies/memory, token expiration timers, and protected client routes (`ProtectedRoute.jsx`).
+- **Trip Creation Wizard:** Implement `TripForm.jsx` multi-step form:
+  - Destination input with real-time text autocomplete.
+  - Date range selector enforcing `end_date >= start_date`.
+  - Traveler counter enforcing positive integers (`travelers > 0`).
+  - Budget slider with currency selector enforcing positive values.
+  - Interest selector chips (cultural, culinary, adventure, nature, relaxation).
+  - Travel style toggle (`fast-paced` vs `relaxed`).
+- **Trip Management Dashboard:** Build `MyTrips.jsx` displaying trip cards, edit modal, delete confirmation modal, and empty state illustrations.
+- **API Client:** Author `services/api.js` and `services/auth.js` with Axios interceptors attaching JWT Bearer headers and handling automatic 401 unauthenticated redirects.
 
-**Goal:** Generate structured, personalized itineraries that satisfy the user's travel preferences and provide useful activity recommendations.
+#### 2. Backend & Database Track (Het, Manal, Jeel — 33.3% each)
+- **Het (Core Application Architecture & Health — 33.3%):**
+  - Implement `app/main.py` with FastAPI initialization, lifespan management, OpenAPI metadata, and CORS middleware configured for development origins.
+  - Build `app/core/config.py` using `pydantic-settings` to load and validate backend environment variables (`DATABASE_URL`, `SECRET_KEY`, `CORS_ORIGINS`).
+  - Create `app/core/exceptions.py` defining domain exceptions (`EntityNotFoundException`, `UnauthorizedException`, `ValidationException`) and global HTTP exception handlers producing unified RFC-7807 error envelopes.
+  - Implement `app/core/logging.py` featuring structured JSON formatting and regex redaction for passwords, API keys, and JWT bearer tokens (NFR-09).
+  - Implement `app/api/v1/endpoints/health.py` (`GET /health` liveness and readiness probes).
+- **Manal (Security, Authentication & DB Session Layer — 33.3%):**
+  - Implement `app/models/user.py` with SQLAlchemy 2.0 mapped columns: `id`, `email` (unique index), `hashed_password`, `role`, `is_active`, and timestamps.
+  - Implement `app/core/security.py` featuring password hashing using Argon2id (`argon2-cffi`) and JWT access token creation/decoding (`python-jose`).
+  - Implement `app/db/session.py` and `app/db/base.py` configuring SQLAlchemy connection pooling (`pool_size=10`, `max_overflow=20`, `pool_pre_ping=True`).
+  - Create `app/schemas/auth.py` and `app/services/auth.py` with registration and credential verification logic.
+  - Implement `app/api/v1/endpoints/auth.py` (`POST /register`, `POST /login`, `GET /me`) and `app/api/deps.py` with the reusable `get_current_user` dependency.
+- **Jeel (Trip Domain, Migrations & Test Harness — 33.3%):**
+  - Implement `app/models/trip.py` with `Trip` and `TripPreferences` tables, foreign keys to `users.id`, and database-level `CheckConstraint` enforcing `traveler_count > 0`, `budget_amount > 0`, and `end_date >= start_date`.
+  - Initialize `alembic.ini` and `alembic/env.py`; generate the baseline migration script creating `users`, `trips`, and `trip_preferences` tables.
+  - Build `app/schemas/trip.py` (`TripCreate`, `TripUpdate`, `TripResponse`) enforcing strict field validations.
+  - Implement `app/repositories/trip_repository.py` and `app/services/trip.py` ensuring all queries automatically scope by `user_id` to strictly isolate private trips.
+  - Implement `app/api/v1/endpoints/trips.py` (`POST /trips`, `GET /trips`, `GET /trips/{id}`, `PATCH /trips/{id}`, `DELETE /trips/{id}`).
 
-**Main points:**
+#### 3. DevOps, Infrastructure & Deployment Track (Kirtan)
+- **Local Container Runtime:** Author `docker-compose.yml` provisioning local PostgreSQL 15 with persistent named volumes (`pgdata`), health check probes, and network isolation.
+- **Environment Specification:** Author `.env.example` templates for both frontend and backend teams.
+- **Pre-Deployment Architecture Planning:** Research target cloud platform hosting specs, containerization layer caching strategies, and database connection limits for Phase 2.
 
-- Integrate the AI model for itinerary generation.
-- Generate day-wise itineraries based on destination, dates, budget, interests, number of travelers and travel style.
-- Recommend activities and attractions for each day.
-- Generate an initial estimated trip cost.
-- Validate the structure and completeness of AI-generated responses.
-- Handle invalid or incomplete AI responses.
-- Verify recommended places against real-world location data and provide verified fallback recommendations when a suggested place cannot be found.
-- Allow users to update their preferences and regenerate an itinerary.
-- Save, view and delete generated itineraries.
-- Handle AI-service and external API failures gracefully, show clear error messages with a retry option, and never save incomplete or invalid itineraries as successful.
+#### 4. Quality Assurance & Verification Track
+- **Frontend Tests:** Unit tests for form validation rules, token storage, and route guard redirects.
+- **Backend Tests:** Implement `tests/conftest.py` with test database fixtures, isolated transaction rollback per test, and `TestClient` injection; author `tests/integration/test_auth.py` and `tests/integration/test_trips.py` verifying registration, duplicate email rejection, login failure anonymity (NFR-02), and cross-user data isolation (HTTP 404 on foreign trip access).
 
-**Implementation notes:** `LLMClient` interface with the Gemini implementation and a structured output schema; Google Places verification; itinerary and cost tables; generation status page with retry; initial accommodation and transport cost estimates labeled Estimated.
+- **Deliverable:** Fully functional end-to-end application where users register, log in with JWT, and create, view, edit, and delete trips with database-enforced constraints.
 
-**Requirements:** FR-10, FR-11, FR-13 to FR-20, FR-24; US-05, US-08, US-11 (save, view, delete), US-13 (places, durations, overlaps and budget checks), US-18 to US-20, US-23; NFR-03, NFR-10 to NFR-13, NFR-15, NFR-16, NFR-19, NFR-20.
+---
 
-**Testing:** Test itinerary generation for different destinations, durations, budgets, interests and travel styles. Check structured output, missing fields, invalid AI responses, fallback recommendations, and whether generated itineraries match the user's inputs.
+### Sprint 2: AI Itinerary Generation, Location Verification & Fallback Engine
 
-**Deliverable:** A working AI itinerary generator that produces structured, personalized, day-wise travel plans.
+*Implements the AI generation pipeline using Gemini via google-genai, structured JSON validation, real-world Google Places verification, fallback substitution, and rich multi-day timeline visualization.*
 
-### Sprint 3: Maps and route optimization
+- **Target Requirements:** FR-05, FR-06, FR-07, FR-08, FR-09, FR-10, FR-16; US-05, US-08, US-11, US-13, US-18, US-19, US-20, US-23; NFR-03, NFR-10, NFR-11, NFR-12, NFR-13, NFR-14.
 
-Connects itinerary activities with real-world locations and helps users understand how to travel between them.
+#### 1. Frontend & UI/UX Track
+- **Generation Progress Screen:** Build `GenerationStatus.jsx` featuring animated progress steps (Prompting AI, Validating Structure, Verifying Real Places, Building Timeline), background polling with timeout handling, and clear error banners with a one-click retry button.
+- **Multi-Day Itinerary Dashboard:** Build `ItineraryDashboard.jsx` featuring tabbed day navigation, expandable timeline view, activity time slots, duration chips, and category tags.
+- **Data Provenance Badges:** Implement `StatusBadge.jsx` displaying clear provenance indicators (`Verified`, `Cached`, `Estimated`, `Unverified`, `Unavailable`) complying with DR-08 and NFR-14.
+- **Fallback Notification UI:** Build callout banners alerting users when an interest-matched alternative is substituted for an unverified POI (FR-08, AF-06).
+- **Preliminary Cost Summary:** Render initial estimated trip cost panel displaying provisional cost breakdown by category (DR-07).
+- **Service Integration:** Implement `services/itineraries.js` handling generation triggers, itinerary retrieval, and deletion.
 
-**Goal:** Display itinerary activities on a map and generate practical routes with transportation recommendations.
+#### 2. Backend & Database Track (Het, Manal, Jeel — 33.3% each)
+- **Het (AI Pipeline, Generation Loop & Output Validation — 33.3%):**
+  - Implement `app/ai/base.py` defining the abstract `LLMClient` protocol and unified AI exceptions (`LLMTimeoutException`, `LLMQuotaException`, `LLMMalformedException`).
+  - Build `app/ai/gemini_client.py` wrapping the `google-genai` SDK with server-side API key resolution, temperature configuration, and request timeouts.
+  - Author `app/ai/prompts.py` constructing structured generation prompts enforcing day-wise JSON schemas, incorporating trip constraints, sanitizing user inputs, and injecting ground truth facts.
+  - Implement `app/ai/generation.py` coordinating the AI request lifecycle with bounded retries (up to 3 attempts) feeding validation errors back to the model.
+  - Implement `app/ai/output_validator.py` parsing raw model output, validating JSON types, checking day-count alignment with trip duration (DR-05), detecting temporal overlaps, and implementing `app/services/itinerary_service.py`.
+- **Manal (Itinerary Persistence, Models & Initial Cost Aggregator — 33.3%):**
+  - Implement `app/models/itinerary.py` defining `Itinerary`, `ItineraryDay`, `ItineraryItem`, and `CostItem` entities with foreign keys and cascade deletes.
+  - Build `app/repositories/itinerary_repository.py` with optimized queries utilizing `selectinload` for eager-loading days, activities, and cost records.
+  - Implement atomic transactional database persistence in `app/services/itinerary_service.py` ensuring complete itineraries are written atomically or rolled back completely on failure.
+  - Implement preliminary cost calculator in `app/domain/cost_calculator.py` aggregating estimated costs across categories with provisional status flags (DR-07).
+  - Create Alembic migration for itinerary tables and implement `app/api/v1/endpoints/itineraries.py` (`GET /trips/{id}/itineraries`, `GET /itineraries/{id}`, `DELETE /itineraries/{id}`).
+- **Jeel (Place Verification, Fallbacks, Provider Registry & Schemas — 33.3%):**
+  - Implement `app/integrations/base.py` and `app/integrations/provider_registry.py` with extensible adapter registry and shared HTTP client with timeout management.
+  - Author `app/integrations/places.py` interfacing with the Google Places API (Find Place from Text, Place Details) to retrieve real-world coordinates, place IDs, address data, and operating hours.
+  - Implement `app/services/verification.py` verifying every AI-suggested POI against Google Places and querying alternative nearby places matching user interests when unverified (FR-08, AF-06).
+  - Author `app/schemas/itinerary.py` defining strict JSON input/output schemas and tagging places with data provenance labels (`Verified`, `Cached`, `Estimated`, `Unverified`, `Unavailable`).
+  - Author offline recorded mock datasets in `tests/fixtures/gemini_responses.json` and `tests/fixtures/places_responses.json`.
 
-**Main points:**
+#### 3. DevOps, Infrastructure & Deployment Track (Kirtan)
+- **CI Secret Isolation:** Configure CI environment variables and key management preventing API key exposure in automated builds.
+- **Provider Mock Framework:** Validate that offline test suites run 100% disconnected from external network access using recorded mock JSON fixtures.
+- **Pre-Deployment Image Architecture:** Plan multi-stage Docker build specifications and base image evaluation (`python:3.11-slim`).
 
-- Integrate map functionality to visualize itinerary locations.
-- Calculate distances and estimated travel times between activities.
-- Optimize the order of activities to reduce unnecessary travel.
-- Recalculate routes after itinerary regeneration.
-- Recommend suitable transportation options.
-- Compare transportation options based on relevant factors such as estimated cost and travel time.
-- Display unavailable or unverified locations clearly on the map and in the itinerary.
+#### 4. Quality Assurance & Verification Track
+- **Frontend Tests:** Component tests for generation polling, retry error handling, and timeline item rendering.
+- **Backend Tests:** Author `tests/unit/test_output_validator.py` and `tests/integration/test_itineraries.py` simulating external API outages, rate-limit 429s, and malformed JSON to verify that unvalidated data is never saved as successful (NFR-11, NFR-13).
 
-**Implementation notes:** Google Maps JavaScript API on the frontend; Google Routes API for distances, times and geometry; the route optimizer from section 6; Amadeus flight and hotel adapters and the transport and accommodation views (US-06, US-21, US-22), with each result labeled by data status.
+- **Deliverable:** Working AI itinerary generation pipeline producing structured, validated, multi-day travel plans with real-world location verification and fallback recommendations, displayed in an interactive dashboard.
 
-**Requirements:** FR-21 to FR-28; US-06, US-10, US-14, US-21, US-22; NFR-17, NFR-21, NFR-22.
+---
 
-**Testing:** Check that places appear at the correct map locations, verify distance and travel-time calculations, test route optimization, validate transportation comparisons, and confirm that unavailable locations are handled properly.
+### Sprint 3: Interactive Maps, Route Calculation, 2-opt Heuristic Optimization & Transport Services
 
-**Deliverable:** An interactive itinerary map with verified places, optimized routes, travel-time estimates and transportation recommendations.
+*Connects itinerary activities with real-world geographic routing via Google Routes API, implements an intelligent 2-opt Travelling Salesperson route optimization algorithm, caches routes, and provides multi-modal transport comparison.*
 
-### Sprint 4: Budget management and itinerary customization
+- **Target Requirements:** FR-11, FR-12, FR-13, FR-14, FR-15; US-06, US-10, US-14, US-21, US-22; NFR-04, NFR-14.
 
-Gives users control over their itinerary while helping them stay within their planned budget and travel schedule.
+#### 1. Frontend & UI/UX Track
+- **Google Maps Integration:** Embed Google Maps JavaScript API via `@react-google-maps/api` in `MapView.jsx` with responsive centering and day-specific marker filtering.
+- **Interactive Map Markers:** Render numbered markers matching itinerary sequence with category icons and interactive `PlaceInfoWindow.jsx` displaying place details, address, photo, and operating hours.
+- **Route Polyline Visualization:** Render color-coded route polylines between consecutive stops on the map, with transit duration and distance badges displayed along legs.
+- **Route Optimization UI:** Implement "Optimize Route" action button with animated reordering feedback and before/after travel time reduction metrics.
+- **Multi-Modal Transport Drawer:** Build `TransportDrawer.jsx` displaying flights, trains, intercity buses, and local cabs sorted by cost and travel time, complete with external booking link-outs.
+- **Accommodation Options View:** Build `AccommodationList.jsx` presenting hotels filtered by destination and budget tier with data provenance labels.
 
-**Goal:** Enable users to customize their travel plans while validating budget limits, activity timings and scheduling constraints.
+#### 2. Backend & Database Track (Het, Manal, Jeel — 33.3% each)
+- **Het (Transport Integrations, Multi-Modal Comparison & Haversine — 33.3%):**
+  - Implement `app/integrations/amadeus.py` connecting to Amadeus for Developers API with client credential OAuth2 token rotation, supporting flight offers search and hotel list lookups.
+  - Implement `app/integrations/ground_transport.py` providing structured timetable and fare estimates for intercity rail and bus connections.
+  - Implement `app/services/transport.py` calculating and comparing transportation choices (flights, trains, buses, local transit, and distance-based cab estimates) sorted by cost and travel time.
+  - Build endpoints in `app/api/v1/endpoints/itineraries.py` (`GET /itineraries/{id}/transport`, `GET /accommodation`) returning options tagged with data provenance and provider booking links.
+  - Implement Haversine straight-line distance math in `app/domain/route_optimizer.py` as a graceful fallback when external routing APIs time out (AF-10).
+- **Manal (Google Routes API, Routing Service & Route Cache Layer — 33.3%):**
+  - Implement `app/integrations/routes.py` invoking the Google Routes API (Compute Route Matrix and Route Geometry) supporting driving, walking, and transit travel modes.
+  - Implement `app/services/routing.py` taking consecutive itinerary stops, computing point-to-point distances (meters) and durations (seconds), and formatting human-readable metrics.
+  - Define `RouteLeg` models and `route_cache` table in `app/models/itinerary.py` storing origin/destination coordinates, polyline geometry, mode, distance, duration, and TTL expiration.
+  - Implement route caching repository layer and `GET /itineraries/{id}/routes` delivering daily route polylines, segment distances, and estimated travel times.
+  - Create Alembic revision for `route_legs` and `route_cache`, and author `tests/integration/test_routing.py`.
+- **Jeel (2-Opt Route Optimization Algorithm & Geo-Spatial Performance — 33.3%):**
+  - Implement `app/domain/route_optimizer.py` utilizing nearest-neighbor heuristic initialization improved by 2-opt local search to eliminate route backtracking.
+  - Build clustering logic in `app/domain/route_optimizer.py` anchoring daily activity sequences to accommodation locations or primary morning arrival points.
+  - Build `POST /itineraries/{id}/optimize` in `app/services/itinerary_service.py` to reorder itinerary items in the database and return before-and-after travel time metrics.
+  - Implement logic in `route_optimizer.py` excluding unverified or missing-coordinate places from routing calculations while preserving their scheduled slots (AF-10).
+  - Author `tests/fixtures/routes_responses.json` and `tests/unit/test_route_optimizer.py` verifying route optimization benchmarks execute under 5 seconds (NFR-04).
 
-**Main points:**
+#### 3. DevOps, Infrastructure & Deployment Track (Kirtan)
+- **Staging Database Setup:** Provision staging PostgreSQL database with geo-query indexing.
+- **Automated Performance Benchmarking:** Author automated benchmark runner testing route recalculation latency across 3-day, 7-day, and 14-day itineraries under concurrent loads.
+- **CI Benchmark Gate:** Integrate performance benchmark verification into GitHub Actions pull request checks.
 
-- Display estimated trip costs and activity-category budget breakdowns.
-- Track the planned daily budget and provide cost alerts.
-- Allow users to add, remove and reorder activities manually.
-- Allow users to replace an activity with an alternative.
-- Automatically recalculate routes after itinerary modifications.
-- Validate whether the itinerary stays within the budget.
-- Check activity durations and opening hours.
-- Detect overlapping activities and scheduling conflicts.
-- Validate that activities fit within the available travel dates and schedule.
-- Implement PDF export for generated and customized itineraries.
+#### 4. Quality Assurance & Verification Track
+- **Frontend Tests:** Visual tests for map rendering, marker pin mapping, and route polyline display.
+- **Backend Tests:** Unit tests in `test_route_optimizer.py` demonstrating that the optimized route order never exceeds initial travel time, and handles degenerate cases (0, 1, or 2 stops); integration tests in `test_routing.py` and `test_transport.py` testing route calculations across varied coordinates.
 
-**Implementation notes:** Budget service and dashboard panels; customization endpoints and the customize page with dnd-kit; schedule validator; the modification pipeline (validate, recalculate routes, recalculate costs, check budget) shared by every edit; ReportLab export.
+- **Deliverable:** Interactive itinerary map with verified places, route polylines, 2-opt route optimization reducing travel time, and multi-modal transport comparison with booking link-outs.
 
-**Requirements:** FR-26, FR-29 to FR-40; US-07, US-09, US-12, US-13; NFR-04, NFR-30, NFR-31, NFR-33.
+---
 
-**Testing:** Test manual itinerary modifications, route recalculation after changes, daily budget alerts, category-wise cost breakdowns, budget-limit violations, opening-hours checks, activity durations and overlapping activities.
+### Sprint 4: Financial/Budget Engine, Schedule Feasibility Validation, Customization & PDF Export
 
-**Deliverable:** A customizable itinerary with budget tracking, cost alerts, schedule validation, automatic route updates and PDF export.
+*Delivers the financial calculation engine with budget thresholds and alerts, schedule validation for conflict detection, an atomic customization pipeline, AI-powered alternative activity replacement, and ReportLab PDF export.*
 
-### Sprint 5: Finalization and export
+- **Target Requirements:** FR-16, FR-17, FR-18, FR-19, FR-20, FR-21; US-07, US-09, US-12, US-13; NFR-04, NFR-17, NFR-18.
 
-Makes the complete application stable, reliable and ready for demonstration and evaluation.
+#### 1. Frontend & UI/UX Track
+- **Financial Dashboard:** Build `BudgetSummaryCard.jsx` and `CategoryCostBar.jsx` displaying total estimated costs, planned trip budget, category-wise spending distribution, and daily spending averages.
+- **Real-Time Budget Alerts:** Implement visual alert banners: 80% threshold warning banner and 100% budget overrun alert banner with recommendations for lower-cost alternatives (DR-03, AF-09).
+- **Drag-and-Drop Itinerary Customization:** Implement full interactive editing in `EditItinerary.jsx` using `@dnd-kit/core`:
+  - Drag-and-drop activity reordering within a day.
+  - Moving activities between different days.
+  - Adding manual activities with name, time, and estimated cost.
+  - Removing activities with automatic gap-filling.
+- **AI Alternative Replacement Modal:** Build `AlternativesModal.jsx` allowing travelers to browse and swap an activity with an interest-matched alternative (US-09).
+- **Schedule Conflict Warnings:** Display inline diagnostic badges highlighting overlapping activity times (DR-04), transit feasibility violations (DR-06), and closed operating hours conflicts (DR-01).
+- **PDF Export Interface:** Implement PDF export button with animated download state, streaming binary PDF from backend and launching it in browser or external reader.
 
-**Goal:** Deliver a fully integrated, tested and deployable AI Travel Planner with PDF export and complete end-to-end functionality.
+#### 2. Backend & Database Track (Het, Manal, Jeel — 33.3% each)
+- **Het (Schedule Feasibility, Opening Hours & AI Alternatives — 33.3%):**
+  - Implement `app/domain/schedule_validator.py` enforcing temporal rules: positive activity durations, zero temporal overlaps between scheduled items (DR-04), and transit feasibility between stops (DR-06).
+  - Enhance `schedule_validator.py` with opening-hours checking against verified POI operating hours (DR-01); explicitly ensure missing hours are never assumed open (NFR-14).
+  - Implement `app/ai/alternatives.py` generating substitute activity recommendations based on remaining time windows, budget headroom, and user interests (US-09).
+  - Implement `app/services/validation.py` and `POST /itineraries/{id}/validate` returning structured conflict diagnostics (`ScheduleConflictError`) with actionable resolution suggestions.
+  - Implement concurrency locking guards during validation and author `tests/unit/test_schedule_validator.py`.
+- **Manal (Financial Engine, Budget Tracking & PDF Document Generation — 33.3%):**
+  - Complete `app/domain/cost_calculator.py` supporting category aggregation, planned daily budget division, multi-currency verification, and provisional flags for unpriced items.
+  - Implement `app/services/budget.py` and `GET /itineraries/{id}/budget` returning spending totals, 80% threshold warnings, 100% budget overrun alerts, and lower-cost alternatives (DR-03, AF-09).
+  - Implement `app/services/export.py` using ReportLab compiling the latest saved itinerary into a clean, formatted PDF document containing day-by-day schedules, route notes, and cost breakdowns.
+  - Implement `app/api/v1/endpoints/export.py` (`GET /itineraries/{id}/export/pdf`) streaming the generated PDF binary with proper MIME headers (`application/pdf`) and filename disposition.
+  - Author `tests/unit/test_cost_calculator.py` and `tests/integration/test_export.py` (verifying failure isolation where PDF error leaves data intact AF-11).
+- **Jeel (Customization Pipeline, Atomic Transactions & Database Auditing — 33.3%):**
+  - Implement item-level CRUD in `app/api/v1/endpoints/itineraries.py`: `POST /items` (add), `DELETE /items/{id}` (remove), and `PUT /days/{id}/order` (reorder).
+  - Implement `POST /itineraries/{id}/items/{item_id}/replace` swapping an existing itinerary item with a verified alternative while preserving day continuity.
+  - Build the atomic mutation pipeline in `app/services/itinerary_service.py` that executes re-validation, route recalculation, cost re-aggregation, and budget checks within a single database transaction.
+  - Implement rollback mechanics in the modification pipeline ensuring that any edit triggering a schedule or route conflict rejects cleanly and preserves the last valid itinerary state (FR-20, AF-08, NFR-17).
+  - Create Alembic revision for activity sorting indices and modification audit fields, and author `tests/integration/test_customization.py` verifying recalculation under 5 seconds (NFR-04).
 
-**Main points:**
+#### 3. DevOps, Infrastructure & Deployment Track (Kirtan)
+- **Container Build Optimization:** Configure ReportLab C-dependencies (FreeType fonts, libpng) in container build manifests.
+- **Database Concurrency Tuning:** Audit database transaction isolation and row locking to ensure atomic customizations under concurrent requests.
+- **Production Build Manifests:** Author final `Dockerfile.prod` and cloud environment provisioning scripts for Sprint 5 deployment.
 
-- Integrate authentication, trip management, AI generation, maps, route optimization, budget management and customization.
-- Fix bugs and improve the user interface.
-- Review and harden API error handling, rate limits and retries across all integrations.
-- Audit that secrets and API keys are not exposed in client code, logs or the repository.
-- Perform final performance and security checks.
-- Complete the project report, presentation and demo preparation.
-- Deploy the frontend, backend and database if deployment is required for evaluation.
+#### 4. Quality Assurance & Verification Track
+- **Frontend Tests:** End-to-end user interaction tests testing drag-and-drop reordering, alternative replacement, and PDF blob download.
+- **Backend Tests:** Comprehensive test suite in `test_cost_calculator.py`, `test_schedule_validator.py`, `test_customization.py`, and `test_export.py` verifying atomic rollback on schedule conflicts, budget threshold mathematics, and PDF generation failure isolation (AF-11).
 
-**Implementation notes:** Rate limiting with slowapi; timeout and retry review for Gemini, Google Maps Platform and Amadeus; secret audit of the repository, build output and logs; HTTPS in deployment; browser and responsive checks (NFR-28, NFR-29); performance checks against NFR-01 to NFR-04.
+- **Deliverable:** Customizable itinerary with budget tracking, cost alerts, schedule validation, automatic route updates, atomic rollback on error, and ReportLab PDF export.
 
-**Requirements:** All of the above, with emphasis on FR-39, US-18, US-23 and NFR-01 to NFR-04, NFR-08, NFR-09, NFR-28, NFR-29.
+---
 
-**Testing:** Perform full regression testing and end-to-end journeys from registration and trip creation through itinerary generation, map visualization, route optimization, budget validation, manual customization, saving and PDF export. Check API failures, invalid AI responses, authentication, permissions and the complete user workflow.
+### Sprint 5: System Integration, Security Hardening, Production Deployment & Release Operations
 
-**Deliverable:** A fully integrated and tested AI Travel Planner with PDF export, complete core functionality, project documentation and a presentation-ready demonstration.
+*Unifies all subsystems, hardens frontend and backend security, executes production multi-stage containerization, provisions cloud infrastructure, configures automated CI/CD deployment, hardens SSL/TLS and CORS, and performs live smoke tests. **Kirtan executes all deployment and DevOps operations**.*
+
+- **Target Requirements:** All functional requirements (FR-01 through FR-21); NFR-01, NFR-02, NFR-03, NFR-04, NFR-05, NFR-06, NFR-07, NFR-08, NFR-09, NFR-10, NFR-11, NFR-15, NFR-16, NFR-17, NFR-18.
+
+#### 1. Frontend & UI/UX Track
+- **Production Build Optimization:** Execute bundle analysis, configure route code splitting via `React.lazy`, enable tree-shaking, and optimize static assets to guarantee page load times under 2 seconds (NFR-01).
+- **Responsive Layout Hardening:** Audit and polish responsive design across mobile phones (375px+), tablets, and desktop displays (NFR-18).
+- **Cross-Browser Verification:** Test and verify flawless execution across modern Chrome, Firefox, Safari, and Edge browsers.
+- **Accessibility (a11y) Audit:** Ensure full WCAG AA compliance: semantic heading hierarchy, ARIA labels on map controls and drag handles, keyboard navigation, and focus traps on modals.
+- **Error Boundaries:** Implement global React `ErrorBoundary.jsx` and network-failure recovery screens.
+
+#### 2. Backend & Database Track (Het, Manal, Jeel)
+- **Integration Resiliency Hardening (Het):** Audit and tune exponential backoff, retry caps, and timeout thresholds across all external integrations (Gemini, Google Places, Google Routes, Amadeus) to guarantee graceful failure behavior (NFR-10, AF-04).
+- **AI Latency Optimization (Het):** Parallelize independent backend tasks (running Google Places lookups concurrently) to consistently achieve complete generation under the 30-second target (NFR-03).
+- **Security & Sanitization Audit (Manal):** Audit Pydantic models, SQL queries, and input length limits across all endpoints to ensure zero XSS or SQL injection vectors (NFR-07).
+- **API Contract Publication (Jeel):** Generate and publish complete OpenAPI 3.0 specification (`docs/api/api-contract.md`) and verify zero stack trace leakage on error responses (NFR-11).
+- **Live Cloud Verification & Sign-Off:** Perform post-deployment smoke testing on the deployed cloud URL: Het verifies live Gemini AI loop; Manal verifies live JWT auth and PDF export; Jeel verifies live Google Maps API and trip customization.
+
+#### 3. DevOps, Infrastructure & Deployment Track (Kirtan — 100% Deployment Lead)
+- **Production Docker Multi-Stage Containerization:**
+  - Build production-ready `Dockerfile.prod` utilizing a two-stage build: build stage for compilers and wheels; lean runtime stage using `python:3.11-slim`, non-root user `appuser` (UID 10001), pre-compiled bytecode (`PYTHONDONTWRITEBYTECODE=1`), and production Uvicorn worker settings.
+  - Author `docker-compose.prod.yml` orchestrating the FastAPI backend, PostgreSQL 15 container with encrypted persistent volumes, internal isolated bridge network, and Nginx reverse proxy.
+- **Cloud Hosting & Infrastructure Provisioning:**
+  - Deploy and provision backend and frontend containers to the production cloud hosting environment (Render, Railway, AWS ECS/EC2, or GCP Cloud Run).
+  - Provision managed PostgreSQL 15 database instance with connection pooling limits, automated daily snapshots, encrypted storage volumes, and private VPC firewall restrictions.
+- **Automated CI/CD Deployment Pipeline:**
+  - Author `.github/workflows/deploy.yml` configuring automated continuous deployment: runs linter and pytest suite, builds Docker image, performs security vulnerability scan, and pushes release to the production cloud host upon pull request merge to `main`.
+- **Production Secret Management & Security Audit:**
+  - Configure production secrets within cloud secret manager (`DATABASE_URL`, `SECRET_KEY`, `GEMINI_API_KEY`, `GOOGLE_MAPS_API_KEY`, `AMADEUS_API_KEY`).
+  - Execute automated secret scanning (`git-secrets`, `trufflehog`) across Git commit history, configuration files, and build logs to verify zero exposed credentials (NFR-09).
+  - Verify that production logging cleanly redacts passwords, tokens, and keys in production log streams.
+- **Production Database Migration Execution & Reference Seeding:**
+  - Configure automated pre-deployment migration execution hook (`alembic upgrade head`) ensuring schema updates apply before incoming traffic starts serving.
+  - Execute automated seed script (`scripts/seed_reference_data.py`) in production to populate reference destinations and categories.
+- **Nginx Reverse Proxy, SSL/TLS Termination & Production Hardening:**
+  - Author `nginx/nginx.conf` acting as reverse proxy for the Uvicorn application server.
+  - Configure SSL/TLS certificates (Let's Encrypt / Cloud SSL) enforcing strict HTTPS encryption across all API routes (NFR-08) with automatic HTTP-to-HTTPS 301 redirection.
+  - Enforce modern security headers (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Content-Security-Policy`).
+  - Restrict production CORS headers strictly to the production frontend domain.
+  - Configure production rate limiting using `slowapi` backed by Redis or shared memory.
+- **Health Probes, Centralized Logging & System Monitoring:**
+  - Connect cloud container liveness and readiness monitors to `GET /health`.
+  - Configure structured JSON log aggregation and real-time error tracking (e.g. Sentry or CloudWatch/Stackdriver) to capture unhandled exceptions without leaking stack traces to clients (NFR-11).
+  - Set up uptime monitoring alerts to notify the team in case of service degradation or API quota exhaustion.
+- **Automated Smoke Testing & Rollback Runbook:**
+  - Execute automated post-deployment smoke test suite against the live cloud domain testing health, user registration/login, trip creation, AI generation, and PDF export.
+  - Document `docs/deployment/runbook.md` specifying step-by-step procedures for zero-downtime deployment, blue/green cutover, database backup restoration, and emergency rollback to previous stable Docker tags.
+
+#### 4. Quality Assurance & Verification Track
+- **Full End-to-End Regression Suite:** Execute and report complete automated test suite (unit, integration, failure-injection, and end-to-end journeys from registration through trip creation, AI generation, map visualization, route optimization, budget validation, manual customization, saving, and PDF export).
+- **Performance Benchmark Audit:** Benchmark system against all performance SLAs: page load < 2s (NFR-01), saved itinerary read < 2s (NFR-02), AI generation < 30s (NFR-03), and route recalculation < 5s (NFR-04).
+- **Security & Integrity Sign-Off:** Execute final security audit confirming zero secret leaks, 100% test pass rate, and full compliance with all NFRs.
+
+- **Deliverable:** Fully integrated, tested, hardened, and containerized AI Travel Planner deployed to the production cloud environment with HTTPS, automated CI/CD, complete documentation, and passing smoke tests.
+
+---
+
+### 13.3 Project-Wide Workload & Responsibility Matrix
+
+| Sprint | Frontend & UI/UX Track | Backend Feature Track (Het, Manal, Jeel) | DevOps & Deployment Track (Kirtan) | QA & Verification Track |
+| :---: | :--- | :--- | :--- | :--- |
+| **Sprint 1** | React/Vite shell, Tailwind tokens, Auth pages (`Login`, `Signup`), `TripForm` wizard, `MyTrips` list. | **Het:** Core shell, config, exceptions, logging, health.<br>**Manal:** User model, Argon2, JWT, DB session pool.<br>**Jeel:** Trip model, CHECK rules, Trip CRUD, Alembic base. | Local Docker Compose, PostgreSQL 15 container, env templates, cloud research. | Form validation tests, Auth integration tests (`test_auth.py`), Trip isolation tests (`test_trips.py`). |
+| **Sprint 2** | Generation status page with polling, multi-day itinerary timeline, provenance badges, fallback callout. | **Het:** Gemini SDK client, prompt builder, AI loop, JSON validator.<br>**Manal:** Itinerary models, eager joins, atomic persist, cost calc.<br>**Jeel:** Places adapter, Verification service, Fallbacks, Schemas. | CI secret isolation, offline mock JSON fixtures (`gemini_responses.json`), container specs. | Output validator unit tests, API outage & 429 rate limit injection tests (`test_itineraries.py`). |
+| **Sprint 3** | Google Maps embed, sequence marker pins, route polylines, transport drawer, accommodation list. | **Het:** Amadeus adapter, Ground transit, Transport API, Haversine.<br>**Manal:** Routes API adapter, Routing service, Route cache table.<br>**Jeel:** 2-opt TSP route optimizer, Cluster logic, Optimization API. | Staging database setup, automated performance benchmark scripts for route optimization. | Visual map regression tests, 2-opt route solver unit tests, Route calculation tests (`test_routing.py`). |
+| **Sprint 4** | Financial dashboard, budget alert banners (80%/100%), dnd-kit drag-and-drop customization, PDF trigger. | **Het:** Schedule validator, Opening hours check, AI alternatives.<br>**Manal:** Cost calculator, Budget service, ReportLab PDF engine.<br>**Jeel:** Customization CRUD, Alternative replace, Atomic pipeline. | ReportLab C-dependencies in container, DB concurrency locking, production build manifests. | DnD interaction tests, Budget threshold boundary tests, PDF failure isolation tests (`test_export.py`). |
+| **Sprint 5** | Production bundle optimization (<2s load), responsive hardening, WCAG AA a11y audit, ErrorBoundary. | **Het:** Resiliency tuning, AI parallelization.<br>**Manal:** Security audit, token transport.<br>**Jeel:** API contract publication.<br>*(All 3: Live cloud endpoint verification).* | **Kirtan executes 100% of Deployment:** Multi-stage Docker, Cloud hosting, CI/CD pipeline, Prod DB, SSL/TLS, Nginx, Secrets audit, Live smoke tests. | Full E2E regression suite, performance SLA audit (<2s reads, <30s generation, <5s routes), security sign-off. |
 
 ### Administrator features
 
