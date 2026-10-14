@@ -1,4 +1,3 @@
-[FINAL_README_updated.md](https://github.com/user-attachments/files/33434406/FINAL_README_updated.md)
 # AI Travel Planner
 
 AI Travel Planner suggests travel itineraries based on a traveler's interests, budget and available time. It builds an AI-curated day-wise plan, recommends local activities, generates a plan that fits a stated budget, and lists the transport options (flight, train, bus and cab) and hotels for the trip.
