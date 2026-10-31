@@ -1,0 +1,19 @@
+{
+  "slug": "sampleton",
+  "name": "Sampleton (sample)",
+  "region": "Sample region (synthetic)",
+  "country_code": "GB",
+  "timezone": "Europe/London",
+  "currency": "GBP",
+  "center": {
+    "lat": 53.9,
+    "lon": 2.2
+  },
+  "bbox": {
+    "min_lat": 53.85,
+    "max_lat": 53.95,
+    "min_lon": 2.1,
+    "max_lon": 2.3
+  },
+  "is_sample": true
+}

@@ -78,14 +78,17 @@ db-down:
 db-migrate:
 	cd $(API_DIR) && .venv/bin/alembic upgrade head
 
-# §5.7: the reset reloads the seed, so it arrives with make seed.
+# §4.7, §5.7: local and test databases only (APP_ENV local or test, DATABASE_URL host localhost or
+# 127.0.0.1). Drops and recreates schema public (applying the auth stub on plain PostgreSQL), then
+# migrates and seeds again. app.db.reset refuses anything else, and make stops there.
 db-reset:
-	@echo "db-reset: not yet implemented (IMP-107)"
+	cd $(API_DIR) && .venv/bin/python -m app.db.reset
+	@$(MAKE) --no-print-directory db-migrate
+	@$(MAKE) --no-print-directory seed
 
+# Loads the SAMPLE fixture plus any directories in SEED_DIRS into DATABASE_URL (§5.6).
 seed:
-	@if [ -e $(API_DIR)/app/places/seed.py ] || [ -d $(API_DIR)/app/places/seed ]; then \
-	  cd $(API_DIR) && .venv/bin/python -m app.places.seed $(CURDIR)/data/fixtures/sampleton $(foreach d,$(SEED_DIRS),$(abspath $(d))) $(ARGS); \
-	else echo "seed: not yet implemented (IMP-107)"; fi
+	cd $(API_DIR) && .venv/bin/python -m app.places.seed $(CURDIR)/data/fixtures/sampleton $(foreach d,$(SEED_DIRS),$(abspath $(d))) $(ARGS)
 
 api:
 	@if [ -f $(API_DIR)/app/main.py ]; then cd $(API_DIR) && .venv/bin/uvicorn app.main:app --reload --port 8000; \
