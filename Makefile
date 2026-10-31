@@ -53,17 +53,25 @@ setup:
 	@case " $(ARGS) " in *" --with-browsers "*) cd $(WEB_DIR) && npx playwright install --with-deps chromium;; \
 	*) echo "setup: Playwright browsers skipped (make setup ARGS=--with-browsers installs Chromium)";; esac
 
+# The hints name where each local key goes; they never print a key (copy them from your own terminal).
 stack-up:
-	@if [ -f supabase/config.toml ]; then supabase start; else echo "stack-up: not yet implemented (IMP-105)"; fi
+	supabase start
+	@echo ""
+	@echo "stack-up: run 'supabase status -o env' and copy these values into your untracked env files:"
+	@echo "  JWT_SECRET       -> SUPABASE_JWT_SECRET in apps/api/.env"
+	@echo "  ANON_KEY         -> NEXT_PUBLIC_SUPABASE_ANON_KEY in apps/web/.env.local"
+	@echo "  SERVICE_ROLE_KEY -> SUPABASE_SERVICE_ROLE_KEY in apps/api/.env (local E2E only)"
+	@echo "  Never paste these values into a tracked file, an issue or a pull request (docs/secrets.md)."
 
 stack-down:
-	@if [ -f supabase/config.toml ]; then supabase stop; else echo "stack-down: not yet implemented (IMP-105)"; fi
+	supabase stop
 
+# --wait returns once the healthcheck passes, so make test-api can follow straight away.
 db-up:
-	@if [ -f docker-compose.yml ]; then docker compose up -d db; else echo "db-up: not yet implemented (IMP-105)"; fi
+	docker compose up -d --wait db
 
 db-down:
-	@if [ -f docker-compose.yml ]; then docker compose down; else echo "db-down: not yet implemented (IMP-105)"; fi
+	docker compose down
 
 db-migrate:
 	@if [ -f $(API_DIR)/alembic.ini ]; then cd $(API_DIR) && .venv/bin/alembic upgrade head; \

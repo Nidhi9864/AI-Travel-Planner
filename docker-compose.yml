@@ -1,0 +1,34 @@
+# Local services (IMP-105, specification §4.1 and §4.7, IMD-03).
+#   db  - plain PostgreSQL 16 for the backend test suites (TEST_DATABASE_URL); started by make db-up.
+#   api - the production API image for the local container smoke (IMP-112). It sits behind the
+#         "api" profile and its env file is optional, so make db-up works on a fresh clone with no
+#         apps/api/Dockerfile and no apps/api/.env. Start it by name: docker compose up --build api
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: travel_test
+    ports:
+      - "5432:5432"
+    # The test database is blank on every start (tests migrate it per run), so its data lives in
+    # memory and no volume is left behind by make db-down.
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d travel_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    profiles: ["api"]
+    build:
+      context: apps/api
+      dockerfile: Dockerfile
+    env_file:
+      - path: apps/api/.env
+        required: false
+    ports:
+      - "8000:8000"
