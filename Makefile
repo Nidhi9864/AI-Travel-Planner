@@ -134,8 +134,12 @@ e2e:
 	@if [ -f $(WEB_DIR)/playwright.config.ts ]; then cd $(WEB_DIR) && npx playwright test --pass-with-no-tests $(ARGS); \
 	else echo "e2e: not yet implemented (IMP-216)"; fi
 
+# The AI JSON Schemas (gr-1, io-1) are exported here (IMP-110); the OpenAPI export and the web types
+# arrive with IMP-214.
 openapi:
-	@echo "openapi: not yet implemented (IMP-110, IMP-214)"
+	@if $(API_READY); then cd $(API_DIR) && .venv/bin/python -m app.schemas.ai_export --out $(CURDIR)/contracts/ai; \
+	else echo "openapi (ai schemas): $(API_PENDING)"; fi
+	@echo "openapi: OpenAPI export and web types not yet implemented (IMP-214)"
 
 openapi-check:
 	@echo "openapi-check: not yet implemented (IMP-214)"

@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-travel-planner:schema:io-1",
+  "$defs": {
+    "ItineraryDayOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "day_number": {
+          "maximum": 14,
+          "minimum": 1,
+          "title": "Day Number",
+          "type": "integer"
+        },
+        "theme": {
+          "maxLength": 80,
+          "title": "Theme",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ItineraryItemOutput"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "day_number",
+        "theme",
+        "items"
+      ],
+      "title": "ItineraryDayOutput",
+      "type": "object"
+    },
+    "ItineraryItemOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "place_id": {
+          "description": "A place_id from the request's shortlist",
+          "minLength": 1,
+          "title": "Place Id",
+          "type": "string"
+        },
+        "start_time": {
+          "description": "24-hour time HH:MM in the destination time zone",
+          "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+          "title": "Start Time",
+          "type": "string"
+        },
+        "duration_min": {
+          "maximum": 480,
+          "minimum": 15,
+          "title": "Duration Min",
+          "type": "integer"
+        },
+        "slot_type": {
+          "enum": [
+            "activity",
+            "meal",
+            "rest"
+          ],
+          "title": "Slot Type",
+          "type": "string"
+        },
+        "note": {
+          "maxLength": 200,
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "place_id",
+        "start_time",
+        "duration_min",
+        "slot_type",
+        "note"
+      ],
+      "title": "ItineraryItemOutput",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "io-1: the model's proposal. Prices, hours, travel times and totals come from code (§8.1).",
+  "properties": {
+    "days": {
+      "items": {
+        "$ref": "#/$defs/ItineraryDayOutput"
+      },
+      "maxItems": 14,
+      "minItems": 1,
+      "title": "Days",
+      "type": "array"
+    },
+    "summary": {
+      "anyOf": [
+        {
+          "maxLength": 500,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Summary"
+    },
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Assumptions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "days",
+    "assumptions"
+  ],
+  "title": "ItineraryOutput",
+  "type": "object"
+}
