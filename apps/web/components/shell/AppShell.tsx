@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useRef, type MouseEvent, type ReactNode } from "react";
 
+import { useAuth } from "@/components/shell/AuthGuard";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -105,7 +106,8 @@ function NavLinks({
 }
 
 function AccountMenu() {
-  // Placeholder until sign-in lands (IMP-109 adds the signed-in user and sign-out).
+  // Inside AuthGuard (every signed-in page) the menu names the user and offers sign-out (IMP-109).
+  const auth = useAuth();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -113,11 +115,18 @@ function AccountMenu() {
           <User aria-hidden="true" className="size-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>Account</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="truncate">
+          {auth?.user.email ?? "Account"}
+        </DropdownMenuLabel>
         <DropdownMenuItem asChild>
           <Link href="/profile">Profile</Link>
         </DropdownMenuItem>
+        {auth && (
+          <DropdownMenuItem onSelect={() => void auth.signOut()}>
+            Sign out
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
