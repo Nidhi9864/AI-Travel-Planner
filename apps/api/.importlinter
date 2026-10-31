@@ -1,0 +1,57 @@
+; Import boundaries of specification §4.4, run by make imports (lint-imports --config .importlinter).
+; This file holds the Layers and Vendor isolation rows (IMP-101 step 6, NFR-031). The Pure domain,
+; Routing isolation, Service order, Booking and Not-MVP contracts are added by the cards that create
+; those modules.
+
+[importlinter]
+root_package = app
+; Needed so that the vendor SDK (google.genai) appears in the import graph.
+include_external_packages = True
+
+; §4.4 Layers: in every module, router may import service; service may import domain and
+; repository; domain and repository never import service or router; clients and adapters sit
+; at the bottom (CLAUDE.md §4 rule 1). The container app.* picks up every module, including the
+; extension modules when they are created. Each layer is optional (in parentheses) because a
+; module creates only the files it needs (§4.3); a layer that exists is always checked.
+[importlinter:contract:layers]
+name = Layers: router > service > domain, repository > client, providers (every module)
+type = layers
+containers =
+    app.*
+layers =
+    (router)
+    (service)
+    (domain) : (repository)
+    (client) : (providers)
+
+; §4.4 Vendor isolation, first half: google.genai is imported only by app.ai.providers.gemini.
+; import-linter sees an external package only by its top-level name, so the rule is written for
+; the whole google namespace (google.genai included). The one allowed import is ignored here;
+; unmatched_ignore_imports_alerting = none lets the contract pass before gemini.py exists (IMP-207).
+[importlinter:contract:vendor-sdk]
+name = Vendor isolation: google (google.genai) only in app.ai.providers.gemini
+type = forbidden
+source_modules =
+    app
+forbidden_modules =
+    google
+ignore_imports =
+    app.ai.providers.gemini -> google
+unmatched_ignore_imports_alerting = none
+
+; §4.4 Vendor isolation, second half: concrete adapters are imported only by app.ai.factory.
+; Everything else uses app.ai.providers.base, app.ai.errors and app.ai.factory (§8.3). A new
+; adapter is added to this list in the card that creates it. The adapters are written as wildcard
+; expressions (app.*.providers.<name>, which only app.ai.providers.<name> matches) because
+; import-linter accepts a wildcard that matches nothing yet, but not a plain module name that does
+; not exist. as_packages = False for the same reason: factory and the adapters are single modules.
+[importlinter:contract:vendor-adapters]
+name = Vendor isolation: concrete adapters only imported by app.ai.factory
+type = protected
+protected_modules =
+    app.*.providers.gemini
+    app.*.providers.mock
+    app.*.providers.finetuned
+allowed_importers =
+    app.ai.factory
+as_packages = False
