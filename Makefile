@@ -73,12 +73,14 @@ db-up:
 db-down:
 	docker compose down
 
+# Applies migrations 0001 onwards to DATABASE_URL (§5.5). On plain PostgreSQL (compose db, CI), apply
+# apps/api/migrations/sql/test_auth_stub.sql first; the Supabase stack already has the auth schema.
 db-migrate:
-	@if [ -f $(API_DIR)/alembic.ini ]; then cd $(API_DIR) && .venv/bin/alembic upgrade head; \
-	else echo "db-migrate: not yet implemented (IMP-106)"; fi
+	cd $(API_DIR) && .venv/bin/alembic upgrade head
 
+# §5.7: the reset reloads the seed, so it arrives with make seed.
 db-reset:
-	@echo "db-reset: not yet implemented (IMP-106)"
+	@echo "db-reset: not yet implemented (IMP-107)"
 
 seed:
 	@if [ -e $(API_DIR)/app/places/seed.py ] || [ -d $(API_DIR)/app/places/seed ]; then \
