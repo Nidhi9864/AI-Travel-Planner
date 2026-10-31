@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+from fixtures.auth import api_app, api_client, auth_user  # noqa: F401  # registers the auth fixtures
 from fixtures.db import db_session, migrated_database_url  # noqa: F401  # registers the DB fixtures
 
 from app.core.config import Settings, get_settings

@@ -8,9 +8,11 @@ import logging
 import os
 import sys
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.auth.deps import current_user
+from app.auth.router import router as auth_router
 from app.core.config import ConfigError, Settings, check_settings, get_settings
 from app.core.errors import register_error_handlers
 from app.core.health import router as health_router
@@ -54,7 +56,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(health_router)
     # Mount point of every resource router (§6.1); the module cards add theirs here.
-    api_v1 = APIRouter(prefix=API_V1_PREFIX)
+    # CurrentUser guards the whole prefix (IMP-108), so every new route requires a valid token by
+    # default; /health and the docs stay outside it.
+    api_v1 = APIRouter(prefix=API_V1_PREFIX, dependencies=[Depends(current_user)])
+    api_v1.include_router(auth_router)
     app.include_router(api_v1)
     return app
 
