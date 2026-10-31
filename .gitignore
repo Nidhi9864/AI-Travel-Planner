@@ -1,0 +1,40 @@
+# Real environment files stay local; only .env.example (IMP-105) is committed.
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+
+# Python
+apps/api/.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node and Next.js
+node_modules/
+apps/web/.next/
+apps/web/out/
+apps/web/build/
+apps/web/next-env.d.ts
+*.tsbuildinfo
+coverage/
+
+# Playwright output
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/blob-report/
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/
+
+# Local tool settings and logs
+.claude/settings.local.json
+*.log
+.DS_Store

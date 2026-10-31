@@ -1,0 +1,46 @@
+# Pre-commit hooks for local use. Installing hooks is handled by IMP-102 (core.hooksPath .githooks);
+# run these on demand with: pre-commit run --all-files
+# The API and web hooks call the project toolchains installed by make setup, so versions match CI.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^docs/spec/
+      - id: end-of-file-fixer
+        exclude: ^docs/spec/
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: detect-private-key
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check (api)
+        entry: apps/api/.venv/bin/ruff check --config apps/api/pyproject.toml
+        language: system
+        types: [python]
+        files: ^apps/api/
+      - id: ruff-format
+        name: ruff format --check (api)
+        entry: apps/api/.venv/bin/ruff format --check --config apps/api/pyproject.toml
+        language: system
+        types: [python]
+        files: ^apps/api/
+      - id: web-lint
+        name: eslint (web)
+        entry: npm run lint --prefix apps/web
+        language: system
+        files: ^apps/web/.*\.(ts|tsx|js|jsx|mjs)$
+        pass_filenames: false
+      - id: web-format
+        name: prettier --check (web)
+        entry: npm run format:check --prefix apps/web
+        language: system
+        files: ^apps/web/
+        pass_filenames: false
