@@ -1,0 +1,10 @@
+# Code owners (IMP-102 step 5, specification §14.4). A pull request touching these paths requests a
+# review from the owner; branch protection enforces it once "Require review from Code Owners" is on.
+# The card asks for Kirtan plus one other owner on the first three paths; CODEOWNERS accepts any one
+# listed owner and the specification names no second owner, so only Kirtan is listed until the team
+# decides (proposed decision in docs/progress/parts/IMP-102-whole-task.md).
+
+/contracts/               @kirtan-S111
+/apps/api/migrations/     @kirtan-S111
+/apps/api/app/schemas/    @kirtan-S111
+/apps/api/app/ai/         @Nidhi9864

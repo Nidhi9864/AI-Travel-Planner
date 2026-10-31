@@ -1,0 +1,27 @@
+#!/bin/sh
+# Commit attribution guard (IMD-61, CLAUDE.md §12). make setup points core.hooksPath here.
+# scripts/check_attribution.sh runs this same file in CI on every pull-request commit message and
+# on the pull-request body, so the local and CI rules cannot drift apart.
+#
+# Usage: commit-msg <message file>. Exit 0 accepts the message; exit 1 rejects it and names the rule.
+# 1. Remove the allowed path texts CLAUDE.md and .claude/ (any case) from the message.
+# 2. Reject, case-insensitively: a line starting with co-authored-by: (rule co-authored-by),
+#    or one of the forbidden tool words as a whole word (rule tool-word). A whole word ends at
+#    anything other than a letter, digit or underscore, as perl \b does in CLAUDE.md §12.
+
+msg_file="${1:?usage: commit-msg <message file>}"
+
+cleaned=$(sed -e 's/[Cc][Ll][Aa][Uu][Dd][Ee]\.[Mm][Dd]//g' \
+  -e 's/\.[Cc][Ll][Aa][Uu][Dd][Ee]\///g' "$msg_file") || exit 1
+
+if printf '%s\n' "$cleaned" | grep -Eiq '^[[:space:]]*co-authored-by:'; then
+  echo "commit-msg: rule co-authored-by failed: a line starts with 'Co-authored-by:' (one author per commit, IMD-61)." >&2
+  exit 1
+fi
+
+if printf '%s\n' "$cleaned" | grep -Eiq '(^|[^[:alnum:]_])(anthropic|claude)([^[:alnum:]_]|$)'; then
+  echo "commit-msg: rule tool-word failed: the message names an AI tool or its vendor (IMD-61); only the paths CLAUDE.md and .claude/ may appear." >&2
+  exit 1
+fi
+
+exit 0
