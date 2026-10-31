@@ -1,8 +1,11 @@
-"""Shared pytest configuration: the provider socket guard (specification §13.1).
+"""Shared pytest configuration: the provider socket guard (specification §13.1) and settings.
 
 Tests never reach a provider. Unless a test is marked ``live``, any attempt to resolve or connect
 to a host in ``PROVIDER_HOSTS`` raises ``ProviderNetworkBlockedError``. Mocked HTTP (respx) and
 recorded responses never open a socket, so they are not affected.
+
+The cached settings are cleared around every test, and ``clean_settings_env`` removes every
+backend variable from the environment, so a test sees only the values it sets.
 """
 
 import socket
@@ -11,6 +14,8 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
+from app.core.config import Settings, get_settings
 
 # Provider API hosts the guard refuses. A pattern "*.example.org" matches example.org and every
 # subdomain. Extension cards add their hosts here (§13.1: api.open-meteo.com, *.wikipedia.org,
@@ -106,3 +111,23 @@ def provider_socket_guard(request: pytest.FixtureRequest) -> Iterator[ProviderSo
         patch.setattr(socket.socket, "connect", guarded_connect)
         patch.setattr(socket.socket, "connect_ex", guarded_connect_ex)
         yield guard
+
+
+@pytest.fixture(autouse=True)
+def reset_settings_cache() -> Iterator[None]:
+    """Let each test read the settings afresh."""
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
+
+@pytest.fixture
+def clean_settings_env(monkeypatch: pytest.MonkeyPatch) -> pytest.MonkeyPatch:
+    """Remove every backend variable (and GOOGLE_API_KEY) and stop reading ``.env``.
+
+    Returns the monkeypatch, so the test sets only the variables it needs with ``setenv``.
+    """
+    for name in [*Settings.model_fields, "google_api_key"]:
+        monkeypatch.delenv(name.upper(), raising=False)
+    monkeypatch.setitem(Settings.model_config, "env_file", None)
+    return monkeypatch

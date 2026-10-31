@@ -1,0 +1,73 @@
+"""App factory and the ASGI app that `make api` runs (uvicorn app.main:app).
+
+`create_app` applies the start-up checks before anything else, so a bad configuration stops the
+process with a message that names the variable, never its value (FR-124).
+"""
+
+import logging
+import os
+import sys
+
+from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.core.config import ConfigError, Settings, check_settings, get_settings
+from app.core.errors import register_error_handlers
+from app.core.health import router as health_router
+from app.core.request_id import REQUEST_ID_HEADER, RequestIdMiddleware
+
+logger = logging.getLogger(__name__)
+
+API_V1_PREFIX = "/api/v1"
+
+# §6.1 CORS: exact origins, these methods and headers, no credentials (bearer token).
+CORS_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+CORS_HEADERS = ["Authorization", "Content-Type", REQUEST_ID_HEADER]
+
+
+def create_app(settings: Settings | None = None) -> FastAPI:
+    settings = settings or get_settings()
+    for warning in check_settings(settings, os.environ):
+        logger.warning(warning)
+
+    # /docs is enabled in local, test and staging; production serves no OpenAPI page (§6.1).
+    docs_enabled = settings.app_env != "production"
+    app = FastAPI(
+        title="AI Travel Planner API",
+        version=settings.build_version,
+        docs_url="/docs" if docs_enabled else None,
+        redoc_url="/redoc" if docs_enabled else None,
+        openapi_url="/openapi.json" if docs_enabled else None,
+    )
+    app.state.settings = settings
+
+    register_error_handlers(app)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.allowed_origins,
+        allow_methods=CORS_METHODS,
+        allow_headers=CORS_HEADERS,
+        allow_credentials=False,
+    )
+    # Added last, so it is the outermost of these and also tags CORS preflight responses.
+    app.add_middleware(RequestIdMiddleware)
+
+    app.include_router(health_router)
+    # Mount point of every resource router (§6.1); the module cards add theirs here.
+    api_v1 = APIRouter(prefix=API_V1_PREFIX)
+    app.include_router(api_v1)
+    return app
+
+
+def __getattr__(name: str) -> FastAPI:
+    # `app` is built on first access (uvicorn's `app.main:app` lookup), so importing this module
+    # for `create_app` reads no settings. A bad configuration exits non-zero with the rules that
+    # failed; the message never holds a value.
+    if name != "app":
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    try:
+        application = create_app()
+    except ConfigError as exc:
+        sys.exit(f"configuration error: {exc}")
+    globals()["app"] = application
+    return application
