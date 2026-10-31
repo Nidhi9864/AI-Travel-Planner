@@ -1,0 +1,4 @@
+# Playwright output (also ignored by git in the root .gitignore).
+test-results/
+playwright-report/
+blob-report/
