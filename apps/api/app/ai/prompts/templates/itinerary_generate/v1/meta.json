@@ -1,0 +1,10 @@
+{
+  "template_id": "itinerary_generate",
+  "version": "v1",
+  "created_on": "2026-11-01",
+  "input_schema_version": "gr-1",
+  "output_schema_version": "io-1",
+  "description": "Orders shortlisted places into a day-by-day itinerary (io-1) for a gr-1 request.",
+  "change_note": "First version: the seven rules of the specification section 8.18 example, details from section 8.1, and the request inserted as quoted JSON data.",
+  "approved_by": "AI/ML Engineer (Prompt Engineering, Validation and Evaluation)"
+}

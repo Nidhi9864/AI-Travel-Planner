@@ -1,0 +1,4 @@
+Plan the trip described by this GenerationRequest (gr-1). Request:
+<request_json>
+${request_json}
+</request_json>
