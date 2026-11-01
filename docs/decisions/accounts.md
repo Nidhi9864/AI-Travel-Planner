@@ -49,3 +49,36 @@ Record "not created" in "Created on" for the optional email sender if it is not 
 | Whether the plan in use allows two active projects, as the Supabase pages show it, with the date checked | TO BE FILLED BY KIRTAN |
 | OD-06: hosted token verification mode (JWKS through `SUPABASE_JWKS_URL`, or HS256 through `SUPABASE_JWT_SECRET`; both are implemented, IMD-04). The OD-06 owner is Het | TO BE FILLED BY KIRTAN |
 | Rows of [docs/secrets.md](../secrets.md) checked against the stores, with the date | TO BE FILLED BY KIRTAN |
+
+## 2. OpenRouteService and email confirmation (Junaid)
+
+### OpenRouteService key
+
+| Item | Result |
+| --- | --- |
+| Key obtained (yes/no) | TO BE FILLED BY JUNAID |
+| Plan or tier, as the OpenRouteService account page shows it | TO BE FILLED BY JUNAID |
+| Limits shown for the endpoints the routing client uses (requests per minute and per day), copied as shown | TO BE FILLED BY JUNAID |
+| Key stored in the password manager and the Render settings (yes/no) | TO BE FILLED BY JUNAID |
+| Date obtained and limits read (YYYY-MM-DD) | TO BE FILLED BY JUNAID |
+
+Without a key the routing client uses the distance estimate (§4.5: local and test run without one). The key value goes only into the password manager and the Render settings, never into this file.
+
+### Email confirmation on staging (card step 4)
+
+| Item | Result |
+| --- | --- |
+| Decision for the staging Supabase project: confirmation on or off | TO BE FILLED BY JUNAID |
+| Reason for the decision | TO BE FILLED BY JUNAID |
+| Sender of the confirmation e-mail: the Supabase default, or the optional sender of section 1 | TO BE FILLED BY JUNAID |
+| Non-team sign-up test: date (YYYY-MM-DD) | TO BE FILLED BY JUNAID |
+| Non-team sign-up test: result (confirmation e-mail received yes/no; the link opened the staging web app and signed in yes/no; or "not run: confirmation off") | TO BE FILLED BY JUNAID |
+
+Record the test as "a non-team address" only. Do not write the address, the e-mail content or the link here.
+
+**Dependency of IMP-109 on this setting.** IMP-109's no-enumeration behaviour depends on confirmation being on:
+
+- With confirmation on, sign-up shows the same neutral notice for a new and an existing address.
+- With confirmation off, a new address is signed in at once while an existing address gets the notice, so a sign-up reveals whether an address has an account.
+
+The local stack has confirmation off (`docs/progress/parts/IMP-109-whole-task.md`, open issues). If the decision above is "off", record that consequence in the reason.
