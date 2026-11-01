@@ -82,3 +82,33 @@ Record the test as "a non-team address" only. Do not write the address, the e-ma
 - With confirmation off, a new address is signed in at once while an existing address gets the notice, so a sign-up reveals whether an address has an account.
 
 The local stack has confirmation off (`docs/progress/parts/IMP-109-whole-task.md`, open issues). If the decision above is "off", record that consequence in the reason.
+
+## 3. Gemini API key, model ID and data-use terms (Nidhi)
+
+Card step 3 (OD-04, OD-14). Fill this in from the official Gemini pricing, terms and rate-limit pages as they read on the date below. The IMP-301 spike confirms the model and records the API style (OD-14) in `docs/decisions/gemini-setup.md`.
+
+| Item | Result |
+| --- | --- |
+| Tier: free or paid | TO BE FILLED BY NIDHI |
+| Data-use terms accepted: the name of the terms and what they say about the use of prompts and responses on this tier | TO BE FILLED BY NIDHI |
+| Rate limits shown for the chosen model (requests per minute, tokens per minute, requests per day), copied as shown | TO BE FILLED BY NIDHI |
+| Chosen `GEMINI_MODEL_ID` | TO BE FILLED BY NIDHI |
+| Spending control for the billed key (NFR-037; §4.5 requires it in production): set yes/no, and where | TO BE FILLED BY NIDHI |
+| Key stored in the password manager and the Render settings (yes/no) | TO BE FILLED BY NIDHI |
+| Date the pages were read and the key created (YYYY-MM-DD) | TO BE FILLED BY NIDHI |
+
+The rules for `GEMINI_MODEL_ID` are in specification §8: one specific stable identifier, never a `-latest` alias or a preview identifier, stored exactly as configured.
+
+Official pages read, one row each:
+
+| Page title | URL | Read on (YYYY-MM-DD) |
+| --- | --- | --- |
+| TO BE FILLED BY NIDHI | TO BE FILLED BY NIDHI | TO BE FILLED BY NIDHI |
+
+Add rows as needed.
+
+**Where the key lives.** `GEMINI_API_KEY` lives only in the team password manager and the hosting dashboards (Render settings; CLAUDE.md §6, [docs/secrets.md](../secrets.md)):
+
+- It never goes into the repository, pull-request CI, an issue or chat.
+- A personal key for `make live-smoke` stays in the member's untracked `apps/api/.env`.
+- Do not set `GOOGLE_API_KEY`.
