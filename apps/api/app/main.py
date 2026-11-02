@@ -17,6 +17,7 @@ from app.core.config import ConfigError, Settings, check_settings, get_settings
 from app.core.errors import register_error_handlers
 from app.core.health import router as health_router
 from app.core.request_id import REQUEST_ID_HEADER, RequestIdMiddleware
+from app.places.router import router as places_router
 from app.trips.router import router as trips_router
 
 logger = logging.getLogger(__name__)
@@ -62,6 +63,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     api_v1 = APIRouter(prefix=API_V1_PREFIX, dependencies=[Depends(current_user)])
     api_v1.include_router(auth_router)
     api_v1.include_router(trips_router)
+    api_v1.include_router(places_router)
     app.include_router(api_v1)
     return app
 
