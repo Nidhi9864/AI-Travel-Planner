@@ -4,7 +4,9 @@ Categories and tags are the enums of places/vocabulary.py, so the OpenAPI contra
 Suitability is true, false or null (unknown, FR-019 AC2); prices are IMD-05 money strings.
 """
 
+from datetime import date
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -12,6 +14,7 @@ from pydantic import BaseModel, Field
 from app.db.models import Destination as DestinationRow
 from app.db.models import Place as PlaceRow
 from app.places.vocabulary import Category, SourceLabel, Tag, VerificationStatus
+from app.schemas.ai import HHMM
 from app.schemas.common import MoneyAmount
 
 COORDINATE_PLACES = 6
@@ -121,3 +124,34 @@ class PlaceSummary(BaseModel):
                 step_free=row.step_free, child_friendly=row.child_friendly, indoor=row.indoor
             ),
         )
+
+
+class OpeningHours(BaseModel):
+    weekday: int = Field(ge=1, le=7, description="1 is Monday")
+    is_closed: bool
+    open_time: HHMM | None
+    close_time: HHMM | None
+    closes_next_day: bool
+
+
+class PlaceSource(BaseModel):
+    name: str
+    source_type: Literal["curated_manual", "osm_import", "official_site", "estimate", "other"]
+    licence: str
+    attribution_text: str | None
+    url: str | None
+    retrieved_on: date | None
+
+
+class PlaceOut(PlaceSummary):
+    """API-17 detail. Missing hours or prices are never filled in (FR-018 AC2)."""
+
+    description: str | None
+    address: str | None
+    website_url: str | None
+    booking_url: str | None
+    hours: list[OpeningHours]
+    hours_checked_on: date | None
+    source: PlaceSource
+    saved: bool | None = Field(None, description="Set only when trip_id is given")
+    must_visit: bool | None = Field(None, description="Set only when trip_id is given")

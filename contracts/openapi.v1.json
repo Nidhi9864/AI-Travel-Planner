@@ -1,0 +1,5476 @@
+{
+  "components": {
+    "schemas": {
+      "AccommodationType": {
+        "enum": [
+          "budget",
+          "mid_range",
+          "premium",
+          "any"
+        ],
+        "title": "AccommodationType",
+        "type": "string"
+      },
+      "Alternative": {
+        "properties": {
+          "cost_delta": {
+            "$ref": "#/components/schemas/AmountRange"
+          },
+          "place": {
+            "$ref": "#/components/schemas/PlaceSummary"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "time_delta_min": {
+            "title": "Time Delta Min",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "place",
+          "cost_delta",
+          "time_delta_min",
+          "reason"
+        ],
+        "title": "Alternative",
+        "type": "object"
+      },
+      "AlternativesOut": {
+        "properties": {
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/Alternative"
+            },
+            "maxItems": 3,
+            "title": "Alternatives",
+            "type": "array"
+          },
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "'No alternative fits' when the list is empty",
+            "title": "Message"
+          }
+        },
+        "required": [
+          "item_id",
+          "alternatives",
+          "message"
+        ],
+        "title": "AlternativesOut",
+        "type": "object"
+      },
+      "AmountRange": {
+        "properties": {
+          "max": {
+            "title": "Max",
+            "type": "string"
+          },
+          "min": {
+            "title": "Min",
+            "type": "string"
+          }
+        },
+        "required": [
+          "min",
+          "max"
+        ],
+        "title": "AmountRange",
+        "type": "object"
+      },
+      "BoundingBox": {
+        "properties": {
+          "max_lat": {
+            "title": "Max Lat",
+            "type": "number"
+          },
+          "max_lon": {
+            "title": "Max Lon",
+            "type": "number"
+          },
+          "min_lat": {
+            "title": "Min Lat",
+            "type": "number"
+          },
+          "min_lon": {
+            "title": "Min Lon",
+            "type": "number"
+          }
+        },
+        "required": [
+          "min_lat",
+          "max_lat",
+          "min_lon",
+          "max_lon"
+        ],
+        "title": "BoundingBox",
+        "type": "object"
+      },
+      "BudgetPriority": {
+        "enum": [
+          "saving",
+          "balanced",
+          "comfort"
+        ],
+        "title": "BudgetPriority",
+        "type": "string"
+      },
+      "BudgetSettingsOut": {
+        "properties": {
+          "contingency_pct": {
+            "title": "Contingency Pct",
+            "type": "integer"
+          },
+          "stay_budget_per_night": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stay Budget Per Night"
+          },
+          "transport_allowance_per_day": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Allowance Per Day"
+          }
+        },
+        "required": [
+          "transport_allowance_per_day",
+          "stay_budget_per_night",
+          "contingency_pct"
+        ],
+        "title": "BudgetSettingsOut",
+        "type": "object"
+      },
+      "BudgetSettingsPatch": {
+        "additionalProperties": false,
+        "description": "API-34 body: any of the three settings; an amount may be null to clear it.",
+        "properties": {
+          "contingency_pct": {
+            "anyOf": [
+              {
+                "maximum": 50.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contingency Pct"
+          },
+          "stay_budget_per_night": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stay Budget Per Night"
+          },
+          "transport_allowance_per_day": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Allowance Per Day"
+          }
+        },
+        "title": "BudgetSettingsPatch",
+        "type": "object"
+      },
+      "BudgetStatus": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "excess": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null unless the status is exceeded",
+            "title": "Excess"
+          },
+          "ratio_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratio Pct"
+          },
+          "status": {
+            "enum": [
+              "none",
+              "near",
+              "exceeded"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "status",
+          "ratio_pct",
+          "excess"
+        ],
+        "title": "BudgetStatus",
+        "type": "object"
+      },
+      "Category": {
+        "enum": [
+          "sight",
+          "museum",
+          "nature",
+          "food",
+          "shopping",
+          "entertainment",
+          "religious",
+          "activity",
+          "stay"
+        ],
+        "title": "Category",
+        "type": "string"
+      },
+      "CategoryCostLine": {
+        "properties": {
+          "category": {
+            "enum": [
+              "activities",
+              "food",
+              "transport",
+              "accommodation",
+              "other",
+              "contingency"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "label": {
+            "enum": [
+              "curated",
+              "estimate",
+              "unavailable",
+              "traveller_input"
+            ],
+            "title": "Label",
+            "type": "string"
+          },
+          "max": {
+            "title": "Max",
+            "type": "string"
+          },
+          "min": {
+            "title": "Min",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "min",
+          "max",
+          "label"
+        ],
+        "title": "CategoryCostLine",
+        "type": "object"
+      },
+      "Contingency": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "pct": {
+            "title": "Pct",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "pct",
+          "amount"
+        ],
+        "title": "Contingency",
+        "type": "object"
+      },
+      "CostSummaryOut": {
+        "properties": {
+          "alerts": {
+            "description": "BUDGET_NEAR and BUDGET_EXCEEDED findings",
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Alerts",
+            "type": "array"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/BudgetStatus"
+          },
+          "by_category": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryCostLine"
+            },
+            "title": "By Category",
+            "type": "array"
+          },
+          "by_day": {
+            "items": {
+              "$ref": "#/components/schemas/DayCostLine"
+            },
+            "title": "By Day",
+            "type": "array"
+          },
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "contingency": {
+            "$ref": "#/components/schemas/Contingency"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/AmountRange"
+          },
+          "incomplete_items": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Incomplete Items",
+            "type": "array"
+          },
+          "per_traveller": {
+            "$ref": "#/components/schemas/PerTraveller"
+          },
+          "planning_total": {
+            "title": "Planning Total",
+            "type": "string"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/BudgetSettingsOut"
+          }
+        },
+        "required": [
+          "currency",
+          "estimate",
+          "contingency",
+          "planning_total",
+          "per_traveller",
+          "budget",
+          "by_day",
+          "by_category",
+          "alerts",
+          "complete",
+          "incomplete_items",
+          "settings"
+        ],
+        "title": "CostSummaryOut",
+        "type": "object"
+      },
+      "Day": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "day_cost": {
+            "$ref": "#/components/schemas/DayCost"
+          },
+          "day_number": {
+            "title": "Day Number",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ai_written when theme_origin is ai",
+            "title": "Theme"
+          },
+          "theme_origin": {
+            "enum": [
+              "ai",
+              "none"
+            ],
+            "title": "Theme Origin",
+            "type": "string"
+          }
+        },
+        "required": [
+          "day_number",
+          "date",
+          "theme",
+          "theme_origin",
+          "items",
+          "day_cost"
+        ],
+        "title": "Day",
+        "type": "object"
+      },
+      "DayCost": {
+        "properties": {
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "max": {
+            "title": "Max",
+            "type": "string"
+          },
+          "min": {
+            "title": "Min",
+            "type": "string"
+          }
+        },
+        "required": [
+          "min",
+          "max",
+          "currency",
+          "complete"
+        ],
+        "title": "DayCost",
+        "type": "object"
+      },
+      "DayCostLine": {
+        "properties": {
+          "contingency_share": {
+            "title": "Contingency Share",
+            "type": "string"
+          },
+          "day_number": {
+            "title": "Day Number",
+            "type": "integer"
+          },
+          "max": {
+            "title": "Max",
+            "type": "string"
+          },
+          "min": {
+            "title": "Min",
+            "type": "string"
+          }
+        },
+        "required": [
+          "day_number",
+          "min",
+          "max",
+          "contingency_share"
+        ],
+        "title": "DayCostLine",
+        "type": "object"
+      },
+      "Destination": {
+        "properties": {
+          "bbox": {
+            "$ref": "#/components/schemas/BoundingBox"
+          },
+          "center": {
+            "$ref": "#/components/schemas/Point"
+          },
+          "country_code": {
+            "title": "Country Code",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_sample": {
+            "description": "True for the SAMPLE fixture; the web shows a banner",
+            "title": "Is Sample",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "timezone": {
+            "description": "IANA time zone; trip dates and times are local to it",
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "region",
+          "country_code",
+          "timezone",
+          "currency",
+          "is_sample",
+          "center",
+          "bbox"
+        ],
+        "title": "Destination",
+        "type": "object"
+      },
+      "EditResultOut": {
+        "properties": {
+          "changed_days": {
+            "items": {
+              "$ref": "#/components/schemas/Day"
+            },
+            "title": "Changed Days",
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "plan_revision": {
+            "title": "Plan Revision",
+            "type": "integer"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/Totals"
+          }
+        },
+        "required": [
+          "plan_revision",
+          "changed_days",
+          "totals",
+          "findings"
+        ],
+        "title": "EditResultOut",
+        "type": "object"
+      },
+      "Effect": {
+        "enum": [
+          "filter",
+          "rank",
+          "note"
+        ],
+        "title": "Effect",
+        "type": "string"
+      },
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ErrorCode"
+          },
+          "details": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "retry_after_s": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry After S"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "request_id"
+        ],
+        "title": "ErrorBody",
+        "type": "object"
+      },
+      "ErrorCode": {
+        "description": "Every error code of §6.3; the HTTP status of each is set by its exception in core.errors.",
+        "enum": [
+          "UNAUTHENTICATED",
+          "NOT_FOUND",
+          "STALE_PLAN",
+          "GENERATION_IN_PROGRESS",
+          "CONFLICT",
+          "VALIDATION_ERROR",
+          "INVALID_EDIT",
+          "RATE_LIMITED",
+          "AI_QUOTA_REACHED",
+          "INTERNAL",
+          "NOT_IMPLEMENTED",
+          "SERVICE_UNAVAILABLE"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorDetail": {
+        "description": "One field problem; `message` is safe to show.",
+        "properties": {
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "message"
+        ],
+        "title": "ErrorDetail",
+        "type": "object"
+      },
+      "ErrorEnvelope": {
+        "description": "The body of every non-2xx response; nothing else (no stack trace, SQL, key or prompt).",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorEnvelope",
+        "type": "object"
+      },
+      "Finding": {
+        "properties": {
+          "code": {
+            "enum": [
+              "OVERLAP",
+              "TRANSFER_TOO_SHORT",
+              "CLOSED_ON_DAY",
+              "OUTSIDE_HOURS",
+              "HOURS_UNVERIFIED",
+              "DAY_TOO_LONG",
+              "BUDGET_EXCEEDED",
+              "BUDGET_NEAR",
+              "MUST_VISIT_MISSING",
+              "UNKNOWN_PLACE",
+              "OUTSIDE_TRIP_DATES",
+              "COST_INCOMPLETE",
+              "ESTIMATE_USED"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "day_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Number"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "place_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set only for MUST_VISIT_MISSING (IMD-42)",
+            "title": "Place Id"
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "suggested_fix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Fix"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "severity",
+          "message",
+          "day_number",
+          "item_id",
+          "place_id",
+          "suggested_fix"
+        ],
+        "title": "Finding",
+        "type": "object"
+      },
+      "GenerationOut": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "day_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Number"
+          },
+          "deterministic_repairs": {
+            "title": "Deterministic Repairs",
+            "type": "integer"
+          },
+          "embedding_model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding Model Id"
+          },
+          "failure_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Message"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "provider_timeout",
+                  "provider_rate_limited",
+                  "provider_quota_exhausted",
+                  "provider_unavailable",
+                  "invalid_output",
+                  "unresolved_validation",
+                  "config_error",
+                  "internal"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason"
+          },
+          "fallback_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "provider_timeout",
+                  "provider_rate_limited",
+                  "provider_quota_exhausted",
+                  "provider_unavailable",
+                  "invalid_output",
+                  "unresolved_validation",
+                  "config_error",
+                  "internal"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fallback Reason"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "itinerary_version_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itinerary Version Id"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "mode": {
+            "enum": [
+              "ai",
+              "rule_based"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "next_action": {
+            "anyOf": [
+              {
+                "enum": [
+                  "retry_rule_based",
+                  "edit_trip",
+                  "retry"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Action"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "enum": [
+                  "model",
+                  "model_repaired",
+                  "fallback_rule_based",
+                  "failed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "plan_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Revision"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "repair_attempts": {
+            "title": "Repair Attempts",
+            "type": "integer"
+          },
+          "retrieval_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "vector",
+                  "lexical_fallback"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null until retrieval is built (IMP-316)",
+            "title": "Retrieval Mode"
+          },
+          "retrieval_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieval Ms"
+          },
+          "scope": {
+            "enum": [
+              "full",
+              "day"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "validating",
+              "repairing",
+              "completed",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "trip_id": {
+            "format": "uuid",
+            "title": "Trip Id",
+            "type": "string"
+          },
+          "validation_summary": {
+            "$ref": "#/components/schemas/ValidationSummary"
+          }
+        },
+        "required": [
+          "id",
+          "trip_id",
+          "scope",
+          "day_number",
+          "mode",
+          "status",
+          "outcome",
+          "failure_reason",
+          "failure_message",
+          "next_action",
+          "fallback_reason",
+          "provider",
+          "model_id",
+          "prompt_version",
+          "repair_attempts",
+          "deterministic_repairs",
+          "validation_summary",
+          "latency_ms",
+          "itinerary_version_id",
+          "plan_revision",
+          "created_at",
+          "completed_at",
+          "retrieval_mode",
+          "embedding_model_id",
+          "retrieval_ms"
+        ],
+        "title": "GenerationOut",
+        "type": "object"
+      },
+      "GenerationStartIn": {
+        "additionalProperties": false,
+        "description": "API-22 body; the scope is always full (IMD-21).",
+        "properties": {
+          "mode": {
+            "default": "ai",
+            "enum": [
+              "ai",
+              "rule_based"
+            ],
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "title": "GenerationStartIn",
+        "type": "object"
+      },
+      "GroupNeed": {
+        "description": "The fixed group-needs vocabulary of IMD-40.",
+        "enum": [
+          "children",
+          "older_adults",
+          "reduced_mobility"
+        ],
+        "title": "GroupNeed",
+        "type": "string"
+      },
+      "HealthOut": {
+        "properties": {
+          "environment": {
+            "enum": [
+              "local",
+              "test",
+              "staging",
+              "production"
+            ],
+            "title": "Environment",
+            "type": "string"
+          },
+          "provider": {
+            "enum": [
+              "GEMINI",
+              "MOCK",
+              "FINETUNED_MODEL"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version",
+          "environment",
+          "provider"
+        ],
+        "title": "HealthOut",
+        "type": "object"
+      },
+      "Item": {
+        "properties": {
+          "cost": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ItemCost"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duration_min": {
+            "title": "Duration Min",
+            "type": "integer"
+          },
+          "end_time": {
+            "description": "24-hour time HH:MM in the destination time zone",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "End Time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_locked": {
+            "title": "Is Locked",
+            "type": "boolean"
+          },
+          "must_visit": {
+            "title": "Must Visit",
+            "type": "boolean"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ai_written when note_origin is ai",
+            "title": "Note"
+          },
+          "note_origin": {
+            "enum": [
+              "ai",
+              "user",
+              "none"
+            ],
+            "title": "Note Origin",
+            "type": "string"
+          },
+          "origin": {
+            "enum": [
+              "model",
+              "fallback_rule_based",
+              "user"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "place": {
+            "$ref": "#/components/schemas/ItemPlace"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "slot_type": {
+            "enum": [
+              "activity",
+              "meal",
+              "rest"
+            ],
+            "title": "Slot Type",
+            "type": "string"
+          },
+          "sources": {
+            "description": "Empty until retrieval is built (IMP-316)",
+            "items": {
+              "$ref": "#/components/schemas/SourceRef"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "start_time": {
+            "description": "24-hour time HH:MM in the destination time zone",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "Start Time",
+            "type": "string"
+          },
+          "travel_from_previous": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TravelLeg"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "position",
+          "place",
+          "slot_type",
+          "start_time",
+          "duration_min",
+          "end_time",
+          "origin",
+          "is_locked",
+          "must_visit",
+          "note",
+          "note_origin",
+          "cost",
+          "travel_from_previous",
+          "sources"
+        ],
+        "title": "Item",
+        "type": "object"
+      },
+      "ItemAddIn": {
+        "additionalProperties": false,
+        "properties": {
+          "day_number": {
+            "maximum": 14.0,
+            "minimum": 1.0,
+            "title": "Day Number",
+            "type": "integer"
+          },
+          "duration_min": {
+            "anyOf": [
+              {
+                "maximum": 480.0,
+                "minimum": 15.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min"
+          },
+          "place_id": {
+            "format": "uuid",
+            "title": "Place Id",
+            "type": "string"
+          },
+          "plan_revision": {
+            "title": "Plan Revision",
+            "type": "integer"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "description": "24-hour time HH:MM in the destination time zone",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          }
+        },
+        "required": [
+          "plan_revision",
+          "day_number",
+          "place_id"
+        ],
+        "title": "ItemAddIn",
+        "type": "object"
+      },
+      "ItemCost": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/SourceLabel"
+          },
+          "max": {
+            "title": "Max",
+            "type": "string"
+          },
+          "min": {
+            "title": "Min",
+            "type": "string"
+          }
+        },
+        "required": [
+          "min",
+          "max",
+          "currency",
+          "label"
+        ],
+        "title": "ItemCost",
+        "type": "object"
+      },
+      "ItemPatchIn": {
+        "additionalProperties": false,
+        "description": "API-26: move, retime, lock or unlock; at least one change.",
+        "properties": {
+          "day_number": {
+            "anyOf": [
+              {
+                "maximum": 14.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Number"
+          },
+          "duration_min": {
+            "anyOf": [
+              {
+                "maximum": 480.0,
+                "minimum": 15.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min"
+          },
+          "is_locked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Locked"
+          },
+          "plan_revision": {
+            "title": "Plan Revision",
+            "type": "integer"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "description": "24-hour time HH:MM in the destination time zone",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          }
+        },
+        "required": [
+          "plan_revision"
+        ],
+        "title": "ItemPatchIn",
+        "type": "object"
+      },
+      "ItemPlace": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "hours_label": {
+            "$ref": "#/components/schemas/SourceLabel"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "lat",
+          "lon",
+          "hours_label"
+        ],
+        "title": "ItemPlace",
+        "type": "object"
+      },
+      "ItineraryOut": {
+        "properties": {
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/Day"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "is_current": {
+            "title": "Is Current",
+            "type": "boolean"
+          },
+          "plan_revision": {
+            "title": "Plan Revision",
+            "type": "integer"
+          },
+          "plan_stale": {
+            "title": "Plan Stale",
+            "type": "boolean"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ItinerarySource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "totals": {
+            "$ref": "#/components/schemas/Totals"
+          },
+          "trip_id": {
+            "format": "uuid",
+            "title": "Trip Id",
+            "type": "string"
+          },
+          "version_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Id"
+          }
+        },
+        "required": [
+          "trip_id",
+          "plan_revision",
+          "version_id",
+          "is_current",
+          "plan_stale",
+          "source",
+          "days",
+          "findings",
+          "totals"
+        ],
+        "title": "ItineraryOut",
+        "type": "object"
+      },
+      "ItinerarySource": {
+        "properties": {
+          "generation_id": {
+            "format": "uuid",
+            "title": "Generation Id",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "model",
+              "model_repaired",
+              "fallback_rule_based",
+              "failed"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "generation_id",
+          "provider",
+          "outcome"
+        ],
+        "title": "ItinerarySource",
+        "type": "object"
+      },
+      "LatestItineraryOut": {
+        "description": "API-09: trip_id is null when the caller has no itinerary (FR-014 AC2).",
+        "properties": {
+          "plan_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Revision"
+          },
+          "trip_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trip Id"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "trip_id",
+          "plan_revision",
+          "updated_at"
+        ],
+        "title": "LatestItineraryOut",
+        "type": "object"
+      },
+      "Money-Input": {
+        "additionalProperties": false,
+        "description": "A money value next to its ISO 4217 currency code (§6.1, IMD-05).",
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "description": "ISO 4217 code, three upper-case letters",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "title": "Money",
+        "type": "object"
+      },
+      "Money-Output": {
+        "additionalProperties": false,
+        "description": "A money value next to its ISO 4217 currency code (§6.1, IMD-05).",
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "currency": {
+            "description": "ISO 4217 code, three upper-case letters",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "title": "Money",
+        "type": "object"
+      },
+      "MustVisitPlace": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "MustVisitPlace",
+        "type": "object"
+      },
+      "OfferedCategory": {
+        "description": "The categories the MVP offers in filters and interests: every Category except stay.",
+        "enum": [
+          "sight",
+          "museum",
+          "nature",
+          "food",
+          "shopping",
+          "entertainment",
+          "religious",
+          "activity"
+        ],
+        "title": "OfferedCategory",
+        "type": "string"
+      },
+      "OpeningHours": {
+        "properties": {
+          "close_time": {
+            "anyOf": [
+              {
+                "description": "24-hour time HH:MM in the destination time zone",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close Time"
+          },
+          "closes_next_day": {
+            "title": "Closes Next Day",
+            "type": "boolean"
+          },
+          "is_closed": {
+            "title": "Is Closed",
+            "type": "boolean"
+          },
+          "open_time": {
+            "anyOf": [
+              {
+                "description": "24-hour time HH:MM in the destination time zone",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Time"
+          },
+          "weekday": {
+            "description": "1 is Monday",
+            "maximum": 7.0,
+            "minimum": 1.0,
+            "title": "Weekday",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weekday",
+          "is_closed",
+          "open_time",
+          "close_time",
+          "closes_next_day"
+        ],
+        "title": "OpeningHours",
+        "type": "object"
+      },
+      "Pace": {
+        "enum": [
+          "relaxed",
+          "balanced",
+          "busy"
+        ],
+        "title": "Pace",
+        "type": "string"
+      },
+      "Page_PlaceSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PlaceSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[PlaceSummary]",
+        "type": "object"
+      },
+      "Page_TripOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TripOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[TripOut]",
+        "type": "object"
+      },
+      "PerTraveller": {
+        "properties": {
+          "label": {
+            "const": "average",
+            "title": "Label",
+            "type": "string"
+          },
+          "largest_share": {
+            "title": "Largest Share",
+            "type": "string"
+          },
+          "travellers": {
+            "title": "Travellers",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "travellers",
+          "largest_share",
+          "label"
+        ],
+        "title": "PerTraveller",
+        "type": "object"
+      },
+      "PlaceOut": {
+        "description": "API-17 detail. Missing hours or prices are never filled in (FR-018 AC2).",
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "booking_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Url"
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "hours": {
+            "items": {
+              "$ref": "#/components/schemas/OpeningHours"
+            },
+            "title": "Hours",
+            "type": "array"
+          },
+          "hours_checked_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hours Checked On"
+          },
+          "hours_label": {
+            "$ref": "#/components/schemas/SourceLabel"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "must_visit": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set only when trip_id is given",
+            "title": "Must Visit"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlacePrice"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when the place has no price"
+          },
+          "price_label": {
+            "$ref": "#/components/schemas/SourceLabel"
+          },
+          "saved": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set only when trip_id is given",
+            "title": "Saved"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PlaceSource"
+          },
+          "suitability": {
+            "$ref": "#/components/schemas/Suitability"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "typical_duration_min": {
+            "title": "Typical Duration Min",
+            "type": "integer"
+          },
+          "verification_status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "website_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website Url"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "tags",
+          "lat",
+          "lon",
+          "typical_duration_min",
+          "price",
+          "price_label",
+          "hours_label",
+          "verification_status",
+          "suitability",
+          "description",
+          "address",
+          "website_url",
+          "booking_url",
+          "hours",
+          "hours_checked_on",
+          "source"
+        ],
+        "title": "PlaceOut",
+        "type": "object"
+      },
+      "PlacePrice": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/SourceLabel"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "min": {
+            "title": "Min",
+            "type": "string"
+          }
+        },
+        "required": [
+          "min",
+          "max",
+          "currency",
+          "label"
+        ],
+        "title": "PlacePrice",
+        "type": "object"
+      },
+      "PlaceSource": {
+        "properties": {
+          "attribution_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attribution Text"
+          },
+          "licence": {
+            "title": "Licence",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "retrieved_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieved On"
+          },
+          "source_type": {
+            "enum": [
+              "curated_manual",
+              "osm_import",
+              "official_site",
+              "estimate",
+              "other"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "name",
+          "source_type",
+          "licence",
+          "attribution_text",
+          "url",
+          "retrieved_on"
+        ],
+        "title": "PlaceSource",
+        "type": "object"
+      },
+      "PlaceSummary": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "hours_label": {
+            "$ref": "#/components/schemas/SourceLabel"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlacePrice"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when the place has no price"
+          },
+          "price_label": {
+            "$ref": "#/components/schemas/SourceLabel"
+          },
+          "suitability": {
+            "$ref": "#/components/schemas/Suitability"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "typical_duration_min": {
+            "title": "Typical Duration Min",
+            "type": "integer"
+          },
+          "verification_status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "tags",
+          "lat",
+          "lon",
+          "typical_duration_min",
+          "price",
+          "price_label",
+          "hours_label",
+          "verification_status",
+          "suitability"
+        ],
+        "title": "PlaceSummary",
+        "type": "object"
+      },
+      "PlanRevisionIn": {
+        "additionalProperties": false,
+        "description": "API-32 and API-38 body.",
+        "properties": {
+          "plan_revision": {
+            "title": "Plan Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "plan_revision"
+        ],
+        "title": "PlanRevisionIn",
+        "type": "object"
+      },
+      "Point": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lon"
+        ],
+        "title": "Point",
+        "type": "object"
+      },
+      "PreferenceEffect": {
+        "properties": {
+          "effect": {
+            "$ref": "#/components/schemas/Effect"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "effect"
+        ],
+        "title": "PreferenceEffect",
+        "type": "object"
+      },
+      "PreferencesIn": {
+        "additionalProperties": false,
+        "description": "API-14 body: a full replacement; omitted fields take the table defaults.",
+        "properties": {
+          "accommodation_type": {
+            "$ref": "#/components/schemas/AccommodationType",
+            "default": "any"
+          },
+          "budget_priority": {
+            "$ref": "#/components/schemas/BudgetPriority",
+            "default": "balanced"
+          },
+          "interests": {
+            "description": "Place categories except stay (IMD-40)",
+            "items": {
+              "$ref": "#/components/schemas/OfferedCategory"
+            },
+            "title": "Interests",
+            "type": "array"
+          },
+          "must_visit_place_ids": {
+            "description": "At most 10 active places of the trip's destination (IMD-40)",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Must Visit Place Ids",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Free text, at most 1,000 characters; do not enter personal details",
+            "title": "Notes"
+          },
+          "pace": {
+            "$ref": "#/components/schemas/Pace",
+            "default": "balanced"
+          },
+          "step_free_required": {
+            "default": false,
+            "title": "Step Free Required",
+            "type": "boolean"
+          },
+          "transport_pref": {
+            "$ref": "#/components/schemas/TransportPref",
+            "default": "walking"
+          }
+        },
+        "title": "PreferencesIn",
+        "type": "object"
+      },
+      "PreferencesOut": {
+        "properties": {
+          "accommodation_type": {
+            "$ref": "#/components/schemas/AccommodationType"
+          },
+          "budget_priority": {
+            "$ref": "#/components/schemas/BudgetPriority"
+          },
+          "effects": {
+            "description": "What each field does in planning (pm-1)",
+            "items": {
+              "$ref": "#/components/schemas/PreferenceEffect"
+            },
+            "title": "Effects",
+            "type": "array"
+          },
+          "interests": {
+            "items": {
+              "$ref": "#/components/schemas/OfferedCategory"
+            },
+            "title": "Interests",
+            "type": "array"
+          },
+          "must_visit_place_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Must Visit Place Ids",
+            "type": "array"
+          },
+          "must_visit_places": {
+            "description": "The must-visit places that are active, with their names",
+            "items": {
+              "$ref": "#/components/schemas/MustVisitPlace"
+            },
+            "title": "Must Visit Places",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "pace": {
+            "$ref": "#/components/schemas/Pace"
+          },
+          "saved": {
+            "description": "False when no preferences were saved yet (defaults shown)",
+            "title": "Saved",
+            "type": "boolean"
+          },
+          "step_free_required": {
+            "title": "Step Free Required",
+            "type": "boolean"
+          },
+          "transport_pref": {
+            "$ref": "#/components/schemas/TransportPref"
+          }
+        },
+        "required": [
+          "interests",
+          "pace",
+          "budget_priority",
+          "transport_pref",
+          "accommodation_type",
+          "step_free_required",
+          "notes",
+          "must_visit_place_ids",
+          "must_visit_places",
+          "effects",
+          "saved"
+        ],
+        "title": "PreferencesOut",
+        "type": "object"
+      },
+      "Profile": {
+        "description": "The caller's profile. `email` comes from the token and is never stored (§6.5).",
+        "properties": {
+          "ai_notice_ack_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Notice Ack At"
+          },
+          "default_preferences": {
+            "additionalProperties": true,
+            "description": "PreferencesIn keys except notes and must_visit_place_ids (FR-004); typed and validated by API-04 (IMP-601)",
+            "title": "Default Preferences",
+            "type": "object"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "home_country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Country"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "preferred_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Currency"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "display_name",
+          "home_country",
+          "preferred_currency",
+          "default_preferences",
+          "ai_notice_ack_at"
+        ],
+        "title": "Profile",
+        "type": "object"
+      },
+      "ProfilePatch": {
+        "additionalProperties": false,
+        "description": "API-04 body: any of these fields (IMP-305 builds the notice flag, IMP-601 the others).",
+        "properties": {
+          "ai_notice_acknowledged": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "true sets ai_notice_ack_at to now (IMD-24)",
+            "title": "Ai Notice Acknowledged"
+          },
+          "default_preferences": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "PreferencesIn keys except notes and must_visit_place_ids",
+            "title": "Default Preferences"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "home_country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Country"
+          },
+          "preferred_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ISO 4217 code",
+            "title": "Preferred Currency"
+          }
+        },
+        "title": "ProfilePatch",
+        "type": "object"
+      },
+      "ProviderCheck": {
+        "properties": {
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "name": {
+            "enum": [
+              "GEMINI",
+              "MOCK",
+              "FINETUNED_MODEL"
+            ],
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "degraded",
+              "down"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "model_id",
+          "status"
+        ],
+        "title": "ProviderCheck",
+        "type": "object"
+      },
+      "ReadinessChecks": {
+        "properties": {
+          "database": {
+            "enum": [
+              "ok",
+              "down"
+            ],
+            "title": "Database",
+            "type": "string"
+          },
+          "migration": {
+            "description": "The Alembic head, or 'behind'",
+            "title": "Migration",
+            "type": "string"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/ProviderCheck"
+          }
+        },
+        "required": [
+          "database",
+          "migration",
+          "provider"
+        ],
+        "title": "ReadinessChecks",
+        "type": "object"
+      },
+      "ReadinessOut": {
+        "properties": {
+          "checks": {
+            "$ref": "#/components/schemas/ReadinessChecks"
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "degraded",
+              "not_ready"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version",
+          "checks"
+        ],
+        "title": "ReadinessOut",
+        "type": "object"
+      },
+      "RegenerateIn": {
+        "additionalProperties": false,
+        "description": "API-30 and API-31 body.",
+        "properties": {
+          "mode": {
+            "default": "ai",
+            "enum": [
+              "ai",
+              "rule_based"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "plan_revision": {
+            "title": "Plan Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "plan_revision"
+        ],
+        "title": "RegenerateIn",
+        "type": "object"
+      },
+      "ReplaceIn": {
+        "additionalProperties": false,
+        "properties": {
+          "place_id": {
+            "format": "uuid",
+            "title": "Place Id",
+            "type": "string"
+          },
+          "plan_revision": {
+            "title": "Plan Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "plan_revision",
+          "place_id"
+        ],
+        "title": "ReplaceIn",
+        "type": "object"
+      },
+      "SourceLabel": {
+        "description": "price_label and hours_label (§6.1 Labels).",
+        "enum": [
+          "curated",
+          "estimate",
+          "unavailable"
+        ],
+        "title": "SourceLabel",
+        "type": "string"
+      },
+      "SourceRef": {
+        "description": "A retrieved source behind an item (A1 §7.1); filled by IMP-316.",
+        "properties": {
+          "attribution_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attribution Text"
+          },
+          "chunk_id": {
+            "format": "uuid",
+            "title": "Chunk Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "place",
+              "guide"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "licence": {
+            "title": "Licence",
+            "type": "string"
+          },
+          "retrieved_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieved On"
+          },
+          "source_name": {
+            "title": "Source Name",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "chunk_id",
+          "kind",
+          "title",
+          "source_name",
+          "licence",
+          "attribution_text",
+          "url",
+          "retrieved_on"
+        ],
+        "title": "SourceRef",
+        "type": "object"
+      },
+      "Suitability": {
+        "description": "Each flag is true, false or null; null means unknown, never \"not suitable\".",
+        "properties": {
+          "child_friendly": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Child Friendly"
+          },
+          "indoor": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Indoor"
+          },
+          "step_free": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Free"
+          }
+        },
+        "required": [
+          "step_free",
+          "child_friendly",
+          "indoor"
+        ],
+        "title": "Suitability",
+        "type": "object"
+      },
+      "Tag": {
+        "description": "Allowed place tags (PD-IMP-205-2): the descriptive tags of the SAMPLE fixture plus the\npricing tags the budget engine reads (§9.3.1 BF-01, BF-02).",
+        "enum": [
+          "architecture",
+          "art",
+          "books",
+          "breakfast",
+          "cafe",
+          "crafts",
+          "cycling",
+          "dinner",
+          "evening",
+          "family",
+          "games",
+          "garden",
+          "history",
+          "indoor",
+          "late",
+          "local",
+          "lunch",
+          "maritime",
+          "market",
+          "music",
+          "outdoor",
+          "quiet",
+          "seafood",
+          "sport",
+          "street-food",
+          "tea",
+          "theatre",
+          "vegetarian",
+          "views",
+          "walking",
+          "water",
+          "wildlife",
+          "child_half",
+          "child_free",
+          "price_per_group"
+        ],
+        "title": "Tag",
+        "type": "string"
+      },
+      "Totals": {
+        "properties": {
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/AmountRange"
+          },
+          "incomplete_count": {
+            "title": "Incomplete Count",
+            "type": "integer"
+          },
+          "planning_total": {
+            "title": "Planning Total",
+            "type": "string"
+          }
+        },
+        "required": [
+          "currency",
+          "estimate",
+          "planning_total",
+          "complete",
+          "incomplete_count"
+        ],
+        "title": "Totals",
+        "type": "object"
+      },
+      "TransportPref": {
+        "enum": [
+          "walking",
+          "local_transport",
+          "car"
+        ],
+        "title": "TransportPref",
+        "type": "string"
+      },
+      "TravelLeg": {
+        "properties": {
+          "distance_m": {
+            "title": "Distance M",
+            "type": "integer"
+          },
+          "minutes": {
+            "title": "Minutes",
+            "type": "integer"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/TravelMode"
+          },
+          "source": {
+            "enum": [
+              "routing_api",
+              "fallback_estimate"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "minutes",
+          "distance_m",
+          "mode",
+          "source"
+        ],
+        "title": "TravelLeg",
+        "type": "object"
+      },
+      "TravelMode": {
+        "description": "itinerary_items.travel_mode (migration 0004).",
+        "enum": [
+          "walking",
+          "local_transport",
+          "car"
+        ],
+        "title": "TravelMode",
+        "type": "string"
+      },
+      "TripDestination": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_sample": {
+            "title": "Is Sample",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "timezone",
+          "currency",
+          "is_sample"
+        ],
+        "title": "TripDestination",
+        "type": "object"
+      },
+      "TripIn": {
+        "additionalProperties": false,
+        "description": "API-07 body. A field naming a user (user_id) is rejected with 422 (IMD-45).",
+        "properties": {
+          "adults": {
+            "default": 1,
+            "description": "1 to 20",
+            "title": "Adults",
+            "type": "integer"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money-Input"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Group total; amount greater than 0 with an ISO 4217 currency"
+          },
+          "children": {
+            "default": 0,
+            "description": "0 to 20",
+            "title": "Children",
+            "type": "integer"
+          },
+          "destination_id": {
+            "description": "An active destination (API-06)",
+            "format": "uuid",
+            "title": "Destination Id",
+            "type": "string"
+          },
+          "end_date": {
+            "description": "On or after start_date; 1 to 14 days in total",
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "group_needs": {
+            "items": {
+              "$ref": "#/components/schemas/GroupNeed"
+            },
+            "title": "Group Needs",
+            "type": "array"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "title": {
+            "description": "1 to 120 characters, trimmed",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "destination_id",
+          "start_date",
+          "end_date"
+        ],
+        "title": "TripIn",
+        "type": "object"
+      },
+      "TripOut": {
+        "properties": {
+          "adults": {
+            "title": "Adults",
+            "type": "integer"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "children": {
+            "title": "Children",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "destination": {
+            "$ref": "#/components/schemas/TripDestination"
+          },
+          "destination_id": {
+            "format": "uuid",
+            "title": "Destination Id",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "group_needs": {
+            "items": {
+              "$ref": "#/components/schemas/GroupNeed"
+            },
+            "title": "Group Needs",
+            "type": "array"
+          },
+          "has_itinerary": {
+            "title": "Has Itinerary",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "num_days": {
+            "title": "Num Days",
+            "type": "integer"
+          },
+          "plan_revision": {
+            "title": "Plan Revision",
+            "type": "integer"
+          },
+          "plan_stale": {
+            "title": "Plan Stale",
+            "type": "boolean"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TripStatus"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "destination_id",
+          "start_date",
+          "end_date",
+          "num_days",
+          "adults",
+          "children",
+          "group_needs",
+          "budget",
+          "status",
+          "plan_revision",
+          "plan_stale",
+          "has_itinerary",
+          "destination",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "TripOut",
+        "type": "object"
+      },
+      "TripPatch": {
+        "additionalProperties": false,
+        "description": "API-11 body: any TripIn field, plus status archived or ready (IMD-25, IMD-35).",
+        "properties": {
+          "adults": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adults"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "children": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Children"
+          },
+          "destination_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Id"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "group_needs": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/GroupNeed"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Needs"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "archived",
+                  "ready"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "TripPatch",
+        "type": "object"
+      },
+      "TripStatus": {
+        "enum": [
+          "draft",
+          "ready",
+          "archived"
+        ],
+        "title": "TripStatus",
+        "type": "string"
+      },
+      "TripSummaryOut": {
+        "description": "API-35: the print view (FR-094).",
+        "properties": {
+          "costs": {
+            "$ref": "#/components/schemas/CostSummaryOut"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/Day"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "trip": {
+            "$ref": "#/components/schemas/TripOut"
+          },
+          "unresolved_findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Unresolved Findings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "trip",
+          "days",
+          "unresolved_findings",
+          "costs",
+          "generated_at"
+        ],
+        "title": "TripSummaryOut",
+        "type": "object"
+      },
+      "ValidateOut": {
+        "properties": {
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "plan_revision": {
+            "title": "Plan Revision",
+            "type": "integer"
+          },
+          "validation_summary": {
+            "$ref": "#/components/schemas/ValidationSummary"
+          }
+        },
+        "required": [
+          "plan_revision",
+          "findings",
+          "validation_summary"
+        ],
+        "title": "ValidateOut",
+        "type": "object"
+      },
+      "ValidationSummary": {
+        "description": "Counts of the findings by severity.",
+        "properties": {
+          "errors": {
+            "title": "Errors",
+            "type": "integer"
+          },
+          "infos": {
+            "title": "Infos",
+            "type": "integer"
+          },
+          "warnings": {
+            "title": "Warnings",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errors",
+          "warnings",
+          "infos"
+        ],
+        "title": "ValidationSummary",
+        "type": "object"
+      },
+      "VerificationStatus": {
+        "enum": [
+          "unverified",
+          "curated_checked",
+          "imported_osm",
+          "estimated"
+        ],
+        "title": "VerificationStatus",
+        "type": "string"
+      },
+      "VersionCreateIn": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "plan_revision": {
+            "title": "Plan Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "plan_revision",
+          "name"
+        ],
+        "title": "VersionCreateIn",
+        "type": "object"
+      },
+      "VersionOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "generation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "named",
+              "automatic"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "plan_revision": {
+            "title": "Plan Revision",
+            "type": "integer"
+          },
+          "reason": {
+            "enum": [
+              "generation",
+              "regeneration",
+              "edit",
+              "restore",
+              "fallback",
+              "manual"
+            ],
+            "title": "Reason",
+            "type": "string"
+          },
+          "validation_summary": {
+            "$ref": "#/components/schemas/ValidationSummary"
+          },
+          "version_no": {
+            "title": "Version No",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "version_no",
+          "name",
+          "reason",
+          "kind",
+          "plan_revision",
+          "validation_summary",
+          "generation_id",
+          "created_at"
+        ],
+        "title": "VersionOut",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "description": "Supabase access token: Authorization: Bearer <token>",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "title": "AI Travel Planner API",
+    "version": "v1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/destinations": {
+      "get": {
+        "operationId": "list_destinations_api_v1_destinations_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Destination"
+                  },
+                  "title": "Response List Destinations Api V1 Destinations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-06 List the supported destinations",
+        "tags": [
+          "places"
+        ]
+      }
+    },
+    "/api/v1/generations/{generation_id}": {
+      "get": {
+        "operationId": "get_generation_api_v1_generations__generation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "generation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Generation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-23 Read a generation's status",
+        "tags": [
+          "generation"
+        ]
+      }
+    },
+    "/api/v1/itineraries/latest": {
+      "get": {
+        "operationId": "latest_itinerary_api_v1_itineraries_latest_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LatestItineraryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-09 Find my most recently changed itinerary",
+        "tags": [
+          "itinerary"
+        ]
+      }
+    },
+    "/api/v1/itinerary/items/{item_id}": {
+      "delete": {
+        "operationId": "delete_item_api_v1_itinerary_items__item_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "plan_revision",
+            "required": true,
+            "schema": {
+              "title": "Plan Revision",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditResultOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-27 Remove an item",
+        "tags": [
+          "itinerary"
+        ]
+      },
+      "patch": {
+        "operationId": "update_item_api_v1_itinerary_items__item_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemPatchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditResultOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-26 Move, retime, lock or unlock an item",
+        "tags": [
+          "itinerary"
+        ]
+      }
+    },
+    "/api/v1/itinerary/items/{item_id}/alternatives": {
+      "get": {
+        "operationId": "list_alternatives_api_v1_itinerary_items__item_id__alternatives_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlternativesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-28 List alternatives for an item",
+        "tags": [
+          "itinerary"
+        ]
+      }
+    },
+    "/api/v1/itinerary/items/{item_id}/replace": {
+      "post": {
+        "operationId": "replace_item_api_v1_itinerary_items__item_id__replace_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditResultOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-29 Replace an item with an alternative",
+        "tags": [
+          "itinerary"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "get_me_api_v1_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-03 Read my profile",
+        "tags": [
+          "profile"
+        ]
+      },
+      "patch": {
+        "operationId": "update_me_api_v1_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfilePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-04 Update my profile",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/api/v1/places": {
+      "get": {
+        "operationId": "search_places_api_v1_places_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "destination_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Destination Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/OfferedCategory"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_PlaceSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-16 Search places",
+        "tags": [
+          "places"
+        ]
+      }
+    },
+    "/api/v1/places/{place_id}": {
+      "get": {
+        "operationId": "get_place_api_v1_places__place_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "place_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Place Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "trip_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Trip Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-17 Read one place",
+        "tags": [
+          "places"
+        ]
+      }
+    },
+    "/api/v1/trips": {
+      "get": {
+        "operationId": "list_trips_api_v1_trips_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_archived",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Archived",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_TripOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-08 List my trips",
+        "tags": [
+          "trips"
+        ]
+      },
+      "post": {
+        "operationId": "create_trip_api_v1_trips_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-07 Create a draft trip",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}": {
+      "delete": {
+        "operationId": "delete_trip_api_v1_trips__trip_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-12 Delete one of my trips",
+        "tags": [
+          "trips"
+        ]
+      },
+      "get": {
+        "operationId": "get_trip_api_v1_trips__trip_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-10 Read one of my trips",
+        "tags": [
+          "trips"
+        ]
+      },
+      "patch": {
+        "operationId": "update_trip_api_v1_trips__trip_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-11 Update one of my trips",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/budget-settings": {
+      "patch": {
+        "operationId": "update_budget_settings_api_v1_trips__trip_id__budget_settings_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetSettingsPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostSummaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-34 Update my trip's budget settings",
+        "tags": [
+          "costs"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/costs": {
+      "get": {
+        "operationId": "get_costs_api_v1_trips__trip_id__costs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostSummaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-33 Read my trip's costs",
+        "tags": [
+          "costs"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/duplicate": {
+      "post": {
+        "operationId": "duplicate_trip_api_v1_trips__trip_id__duplicate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-13 Duplicate one of my trips",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/generations": {
+      "post": {
+        "operationId": "start_generation_api_v1_trips__trip_id__generations_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerationStartIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationOut"
+                }
+              }
+            },
+            "description": "Same request already active"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-22 Start generating my trip's itinerary",
+        "tags": [
+          "generation"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/itinerary": {
+      "get": {
+        "operationId": "get_itinerary_api_v1_trips__trip_id__itinerary_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-24 Read my trip's itinerary",
+        "tags": [
+          "itinerary"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/itinerary/days/{day_number}/regenerate": {
+      "post": {
+        "operationId": "regenerate_day_api_v1_trips__trip_id__itinerary_days__day_number__regenerate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "day_number",
+            "required": true,
+            "schema": {
+              "maximum": 14,
+              "minimum": 1,
+              "title": "Day Number",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegenerateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationOut"
+                }
+              }
+            },
+            "description": "Same request already active"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-30 Regenerate one day",
+        "tags": [
+          "generation"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/itinerary/items": {
+      "post": {
+        "operationId": "add_item_api_v1_trips__trip_id__itinerary_items_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemAddIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditResultOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-25 Add a place to a day",
+        "tags": [
+          "itinerary"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/itinerary/regenerate": {
+      "post": {
+        "operationId": "regenerate_itinerary_api_v1_trips__trip_id__itinerary_regenerate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegenerateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationOut"
+                }
+              }
+            },
+            "description": "Same request already active"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-31 Regenerate the whole itinerary",
+        "tags": [
+          "generation"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/itinerary/validate": {
+      "post": {
+        "operationId": "validate_itinerary_api_v1_trips__trip_id__itinerary_validate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanRevisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-32 Revalidate my trip's itinerary",
+        "tags": [
+          "itinerary"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/preferences": {
+      "get": {
+        "operationId": "get_preferences_api_v1_trips__trip_id__preferences_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-15 Read my trip's preferences",
+        "tags": [
+          "trips"
+        ]
+      },
+      "put": {
+        "operationId": "save_preferences_api_v1_trips__trip_id__preferences_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferencesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-14 Save my trip's preferences and must-visit places",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/saved-places": {
+      "get": {
+        "operationId": "list_saved_places_api_v1_trips__trip_id__saved_places_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceSummary"
+                  },
+                  "title": "Response List Saved Places Api V1 Trips  Trip Id  Saved Places Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-21 List my trip's saved places",
+        "tags": [
+          "places"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/saved-places/{place_id}": {
+      "delete": {
+        "operationId": "unsave_place_api_v1_trips__trip_id__saved_places__place_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "place_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Place Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-20 Remove a saved place from my trip",
+        "tags": [
+          "places"
+        ]
+      },
+      "put": {
+        "operationId": "save_place_api_v1_trips__trip_id__saved_places__place_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "place_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Place Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-19 Save a place to my trip",
+        "tags": [
+          "places"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/summary": {
+      "get": {
+        "operationId": "trip_summary_api_v1_trips__trip_id__summary_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripSummaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-35 Read my trip's printable summary",
+        "tags": [
+          "itinerary"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/versions": {
+      "get": {
+        "operationId": "list_versions_api_v1_trips__trip_id__versions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VersionOut"
+                  },
+                  "title": "Response List Versions Api V1 Trips  Trip Id  Versions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-36 List my trip's saved versions",
+        "tags": [
+          "itinerary"
+        ]
+      },
+      "post": {
+        "operationId": "create_version_api_v1_trips__trip_id__versions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-37 Save a named version",
+        "tags": [
+          "itinerary"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/versions/{version_id}/restore": {
+      "post": {
+        "operationId": "restore_version_api_v1_trips__trip_id__versions__version_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trip Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanRevisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "API-38 Restore a saved version",
+        "tags": [
+          "itinerary"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "summary": "API-01 Liveness",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "ready_health_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessOut"
+                }
+              }
+            },
+            "description": "The database is down"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error envelope (§6.3)"
+          }
+        },
+        "summary": "API-02 Readiness",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  }
+}

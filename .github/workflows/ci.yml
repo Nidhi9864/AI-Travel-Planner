@@ -45,6 +45,8 @@ jobs:
       - run: make lint
       - run: make typecheck
       - run: make imports
+      # IMP-214 (IMD-06): fails when contracts/ or the web types are stale against the API models.
+      - run: make openapi-check
 
   unit:
     name: unit

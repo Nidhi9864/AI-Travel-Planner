@@ -89,6 +89,10 @@ async def test_inventory_public_routes_answer_without_a_token() -> None:
     async with client_for(app) as client:
         for method, path in public:
             response = await client.request(method, path)
+            if response.status_code == 501:
+                # IMD-37: a declared, unbuilt route (API-02 until IMP-201) is skipped by this suite.
+                assert response.json()["error"]["code"] == "NOT_IMPLEMENTED", f"{method} {path}"
+                continue
             assert response.status_code == 200, f"{method} {path}"
 
 

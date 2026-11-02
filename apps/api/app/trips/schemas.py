@@ -9,7 +9,7 @@ trips/domain.py; these models fix the types and forbid unknown fields (IMD-45).
 import re
 from datetime import date
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
@@ -145,3 +145,19 @@ class PreferencesOut(BaseModel):
     )
     effects: list[PreferenceEffect] = Field(description="What each field does in planning (pm-1)")
     saved: bool = Field(description="False when no preferences were saved yet (defaults shown)")
+
+
+class TripPatch(BaseModel):
+    """API-11 body: any TripIn field, plus status archived or ready (IMD-25, IMD-35)."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str | None = None
+    destination_id: UUID | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    adults: int | None = None
+    children: int | None = None
+    group_needs: list[GroupNeed] | None = None
+    budget: Money | None = None
+    status: Literal[TripStatus.ARCHIVED, TripStatus.READY] | None = None
