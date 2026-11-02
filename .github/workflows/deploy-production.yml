@@ -1,0 +1,128 @@
+# Production deployment (IMP-112, specification §4.5, IMD-38). Run by hand (Kirtan) from a release
+# tag through "Run workflow"; never on push or pull request. Same order as staging: migrations
+# against the production database first (make db-migrate), then the Render deploy hook, then wait
+# until /health reports the tagged commit, then make smoke. The container never migrates on start.
+#
+# Until the production accounts exist (IMP-113, OD-15) the four secrets below are missing: the job
+# then prints "production not configured (blocked by IMP-113)" and ends successfully without
+# deploying. Secrets come only from the masked GitHub secrets store and are never printed. Names and
+# purposes: docs/guides/deployment.md.
+name: Deploy production
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to deploy (for example v1.0.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  deploy-production:
+    name: deploy-production
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Check the production configuration
+        id: config
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          PRODUCTION_RENDER_DEPLOY_HOOK_URL: ${{ secrets.PRODUCTION_RENDER_DEPLOY_HOOK_URL }}
+          PRODUCTION_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          PRODUCTION_WEB_ORIGIN: ${{ secrets.PRODUCTION_WEB_ORIGIN }}
+        run: |
+          missing=""
+          for name in PRODUCTION_DATABASE_URL PRODUCTION_RENDER_DEPLOY_HOOK_URL PRODUCTION_API_URL PRODUCTION_WEB_ORIGIN; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "production not configured (blocked by IMP-113)"
+            echo "missing secrets (names only):$missing"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "production configured"
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The input is passed through env, never interpolated into the script.
+      - name: Check the release tag
+        if: steps.config.outputs.configured == 'true'
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$'; then
+            echo "tag '$TAG' is not a release tag (vMAJOR.MINOR.PATCH)"
+            exit 1
+          fi
+      - if: steps.config.outputs.configured == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve the tagged commit (it must be on main)
+        if: steps.config.outputs.configured == 'true'
+        run: |
+          sha="$(git rev-parse HEAD)"
+          git merge-base --is-ancestor "$sha" origin/main || { echo "the tag is not on main"; exit 1; }
+          echo "DEPLOY_SHA=$sha" >> "$GITHUB_ENV"
+          echo "deploying $sha"
+      - if: steps.config.outputs.configured == 'true'
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: apps/api/pyproject.toml
+      # The API half of make setup (the web packages are not needed here).
+      - name: Install the API toolchain
+        if: steps.config.outputs.configured == 'true'
+        run: |
+          python -m venv apps/api/.venv
+          apps/api/.venv/bin/python -m pip install -e "apps/api[dev]"
+
+      - name: Apply migrations to production (IMD-38)
+        if: steps.config.outputs.configured == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: make db-migrate
+
+      - name: Trigger the Render deploy hook
+        if: steps.config.outputs.configured == 'true'
+        env:
+          HOOK_URL: ${{ secrets.PRODUCTION_RENDER_DEPLOY_HOOK_URL }}
+        run: curl -fsS -X POST -o /dev/null "${HOOK_URL}&ref=${DEPLOY_SHA}"
+
+      - name: Wait until production reports the tagged commit
+        if: steps.config.outputs.configured == 'true'
+        env:
+          API_URL: ${{ secrets.PRODUCTION_API_URL }}
+        run: |
+          for attempt in $(seq 1 80); do
+            version="$(curl -fsS --max-time 60 "${API_URL%/}/health" \
+              | python -c 'import json, sys; print(json.load(sys.stdin)["version"])' 2>/dev/null || true)"
+            if [ "$version" = "$DEPLOY_SHA" ]; then
+              echo "production runs $DEPLOY_SHA (attempt $attempt)"
+              exit 0
+            fi
+            echo "attempt $attempt: production reports '${version:-no answer}', waiting for $DEPLOY_SHA"
+            sleep 15
+          done
+          echo "production did not report $DEPLOY_SHA within 20 minutes"
+          exit 1
+
+      - name: Smoke test production
+        if: steps.config.outputs.configured == 'true'
+        env:
+          API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          WEB_ORIGIN: ${{ secrets.PRODUCTION_WEB_ORIGIN }}
+        run: make smoke URL="$API_URL" ARGS="--web-origin $WEB_ORIGIN"

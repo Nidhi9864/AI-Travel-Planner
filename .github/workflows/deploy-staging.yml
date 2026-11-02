@@ -1,0 +1,112 @@
+# Staging deployment (IMP-112, specification §4.5, IMD-38). Runs after the CI workflow succeeds on a
+# push to main; never on pull requests. Order: migrations against the staging database first
+# (make db-migrate), then the Render deploy hook, then wait until /health reports the deployed
+# commit, then make smoke. The container never migrates on start.
+#
+# Until the hosted accounts exist (IMP-113) the four secrets below are missing: the job then prints
+# "staging not configured (blocked by IMP-113)" and ends successfully without deploying. Secrets come
+# only from the masked GitHub secrets store and are never printed. Names and purposes:
+# docs/guides/deployment.md.
+name: Deploy staging
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+# One staging deployment at a time; a newer push waits for the running one.
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  deploy-staging:
+    name: deploy-staging
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Check the staging configuration
+        id: config
+        env:
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_RENDER_DEPLOY_HOOK_URL: ${{ secrets.STAGING_RENDER_DEPLOY_HOOK_URL }}
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+          STAGING_WEB_ORIGIN: ${{ secrets.STAGING_WEB_ORIGIN }}
+        run: |
+          missing=""
+          for name in STAGING_DATABASE_URL STAGING_RENDER_DEPLOY_HOOK_URL STAGING_API_URL STAGING_WEB_ORIGIN; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "staging not configured (blocked by IMP-113)"
+            echo "missing secrets (names only):$missing"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "staging configured; deploying $DEPLOY_SHA"
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.config.outputs.configured == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.DEPLOY_SHA }}
+          persist-credentials: false
+      - if: steps.config.outputs.configured == 'true'
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: apps/api/pyproject.toml
+      # The API half of make setup (the web packages are not needed here).
+      - name: Install the API toolchain
+        if: steps.config.outputs.configured == 'true'
+        run: |
+          python -m venv apps/api/.venv
+          apps/api/.venv/bin/python -m pip install -e "apps/api[dev]"
+
+      - name: Apply migrations to staging (IMD-38)
+        if: steps.config.outputs.configured == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: make db-migrate
+
+      - name: Trigger the Render deploy hook
+        if: steps.config.outputs.configured == 'true'
+        env:
+          HOOK_URL: ${{ secrets.STAGING_RENDER_DEPLOY_HOOK_URL }}
+        run: curl -fsS -X POST -o /dev/null "${HOOK_URL}&ref=${DEPLOY_SHA}"
+
+      - name: Wait until staging reports the deployed commit
+        if: steps.config.outputs.configured == 'true'
+        env:
+          API_URL: ${{ secrets.STAGING_API_URL }}
+        run: |
+          for attempt in $(seq 1 80); do
+            version="$(curl -fsS --max-time 60 "${API_URL%/}/health" \
+              | python -c 'import json, sys; print(json.load(sys.stdin)["version"])' 2>/dev/null || true)"
+            if [ "$version" = "$DEPLOY_SHA" ]; then
+              echo "staging runs $DEPLOY_SHA (attempt $attempt)"
+              exit 0
+            fi
+            echo "attempt $attempt: staging reports '${version:-no answer}', waiting for $DEPLOY_SHA"
+            sleep 15
+          done
+          echo "staging did not report $DEPLOY_SHA within 20 minutes"
+          exit 1
+
+      - name: Smoke test staging
+        if: steps.config.outputs.configured == 'true'
+        env:
+          API_URL: ${{ secrets.STAGING_API_URL }}
+          WEB_ORIGIN: ${{ secrets.STAGING_WEB_ORIGIN }}
+        run: make smoke URL="$API_URL" ARGS="--web-origin $WEB_ORIGIN"

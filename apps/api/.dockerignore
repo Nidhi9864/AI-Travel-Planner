@@ -1,0 +1,7 @@
+# Build context of apps/api/Dockerfile (IMP-112): only pyproject.toml and app/ are copied.
+# Everything else stays out of the context, and env files never reach the image.
+*
+!pyproject.toml
+!app/
+**/__pycache__
+**/*.py[cod]
