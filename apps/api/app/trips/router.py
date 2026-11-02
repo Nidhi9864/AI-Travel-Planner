@@ -1,4 +1,5 @@
-"""Trip routes API-07, API-08 and API-10 (specification §6.6.2; FR-005, FR-007, FR-008).
+"""Trip routes API-07, API-08, API-10, API-14 and API-15 (specification §6.6.2; FR-005, FR-007,
+FR-008, FR-009, FR-010).
 
 Mounted under /api/v1, whose router requires CurrentUser (IMP-108); the user comes from the token.
 """
@@ -11,7 +12,7 @@ from fastapi import APIRouter, Query, status
 from app.auth.deps import CurrentUser, DbSession
 from app.schemas.common import Page
 from app.trips import service
-from app.trips.schemas import TripIn, TripOut
+from app.trips.schemas import PreferencesIn, PreferencesOut, TripIn, TripOut
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 
@@ -42,3 +43,23 @@ async def list_trips(
 @router.get("/{trip_id}", response_model=TripOut, summary="API-10 Read one of my trips")
 async def get_trip(trip_id: UUID, user: CurrentUser, session: DbSession) -> TripOut:
     return await service.get_trip(session, user.user_id, trip_id)
+
+
+@router.put(
+    "/{trip_id}/preferences",
+    response_model=PreferencesOut,
+    summary="API-14 Save my trip's preferences and must-visit places",
+)
+async def save_preferences(
+    trip_id: UUID, body: PreferencesIn, user: CurrentUser, session: DbSession
+) -> PreferencesOut:
+    return await service.save_preferences(session, user.user_id, trip_id, body)
+
+
+@router.get(
+    "/{trip_id}/preferences",
+    response_model=PreferencesOut,
+    summary="API-15 Read my trip's preferences",
+)
+async def get_preferences(trip_id: UUID, user: CurrentUser, session: DbSession) -> PreferencesOut:
+    return await service.get_preferences(session, user.user_id, trip_id)

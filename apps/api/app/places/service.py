@@ -43,3 +43,15 @@ async def search_places(
     return Page[PlaceSummary](
         items=[PlaceSummary.from_row(row) for row in rows], total=total, limit=limit, offset=offset
     )
+
+
+async def active_place_names(
+    session: AsyncSession, destination_id: UUID, place_ids: Sequence[UUID]
+) -> dict[UUID, str]:
+    """Name by id of the given places that are active in the destination, ordered by name.
+
+    Used by the trips module (IMP-204) to check must-visit places and to name them; an id that
+    is missing, inactive or of another destination is simply absent from the result.
+    """
+    rows = await repository.active_places_by_ids(session, destination_id, place_ids)
+    return {row.id: row.name for row in rows}

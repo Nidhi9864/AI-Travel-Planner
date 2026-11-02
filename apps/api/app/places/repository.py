@@ -57,3 +57,23 @@ async def search_places(
     total = await session.scalar(select(func.count()).select_from(query.subquery()))
     page = query.order_by(Place.name, Place.id).limit(limit).offset(offset)
     return list((await session.scalars(page)).all()), int(total or 0)
+
+
+async def active_places_by_ids(
+    session: AsyncSession, destination_id: UUID, place_ids: Sequence[UUID]
+) -> list[Place]:
+    """The places among ``place_ids`` that are active and belong to an active destination."""
+    if not place_ids:
+        return []
+    query = (
+        select(Place)
+        .join(Destination, Destination.id == Place.destination_id)
+        .where(
+            Place.id.in_(list(place_ids)),
+            Place.destination_id == destination_id,
+            Place.is_active.is_(True),
+            Destination.is_active.is_(True),
+        )
+        .order_by(Place.name, Place.id)
+    )
+    return list((await session.scalars(query)).all())
