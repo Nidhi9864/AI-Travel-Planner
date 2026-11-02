@@ -1,13 +1,15 @@
 # Contributing
 
-How the ten members turn task parts into merged code, following the Team Contribution Plan (specification §14.3 and §14.4) and decisions IMD-61, IMD-62 and IMD-63. The working rules for code are in [CLAUDE.md](../../CLAUDE.md); the cards are in [docs/spec/TASK_REGISTER.md](../spec/TASK_REGISTER.md).
+How the ten members turn task parts into merged code, following the Team Contribution Plan (specification §14.3 and §14.4) and decisions IMD-61, IMD-62, IMD-63, IMD-66 (one run per card) and IMD-68 (working agreement). Where CLAUDE.md §12 still says one branch per part, IMD-66 applies. The working rules for code are in [CLAUDE.md](../../CLAUDE.md); the cards are in [docs/spec/TASK_REGISTER.md](../spec/TASK_REGISTER.md).
 
-## 1. One part, one branch, one pull request
+## 1. One card, one run, one branch, one pull request (IMD-66)
 
-- Every card names its lead and its parts in the "Owners and parts" row. Build only your part and use other parts through their contracts.
+- Every card names its lead and its parts in the "Owners and parts" row. Each part owner builds their part and uses the other parts through their contracts.
 - Before starting, check that the card's prerequisites are merged on `main` (their part records exist in `docs/progress/parts/`).
-- Branch name: `feat|fix|chore/IMP-NNN-<part-slug>`, one branch per part, for example `feat/IMP-409-move-api` (Het) and `feat/IMP-409-move-controls` (Manasvi). A single-owner card uses the slug `whole-task` or a short slug.
-- The backend, database or AI part merges first; the screen part that uses it merges after it. Screen parts can start earlier against the generated client and stub endpoints.
+- One run per card: all parts of a card are built in one run, on one branch, and reach `main` in one pull request.
+- Branch name: `feat|fix|chore/IMP-NNN-<short>`, one branch per card, for example `feat/IMP-409-move` for both IMP-409 parts. A single-owner card may use the slug `whole-task`.
+- Each commit belongs to exactly one part and is authored and committed by that part's owner (section 2). Within the branch, the backend, database or AI part's commits come first and the screen part's commits after them.
+- Each part still gets its own part record, `docs/progress/parts/IMP-NNN-<part-slug>.md` (IMD-62), added in the card's pull request.
 - At most one migration per pull request (a `migrations/sql/NNNN_name.sql` and `versions/NNNN_name.py` pair).
 
 ## 2. Commits
@@ -44,10 +46,10 @@ git log origin/main..HEAD --format='%B' | perl -ne 's/CLAUDE\.md|\.claude\///gi;
 ## 3. Pull requests
 
 - Opened with `gh pr create` from the operator's account, using the template in `.github/pull_request_template.md`: linked task, part and requirement IDs, what changed, tests run with their result lines, screenshots for UI changes, the contract and migration questions, part owner and reviewer.
-- Title names the part, for example `IMP-409 · move-controls part` (single-owner card: `IMP-409 · whole task`).
-- Assigned to the part owner; the reviewer is the one named in the run prompt. The reviewer is never the account that opened the pull request and never the part owner. Review across the seam: the API owner reviews the screen part and the screen owner reviews the API part.
+- Title names the card and its parts, for example `IMP-409 · move-api and move-controls parts` (single-owner card: `IMP-409 · whole task`).
+- Assigned to the part owners; the reviewer is the one named in the run prompt. The reviewer owns no part of the card and is not the operator who opens the pull request (IMD-66).
 - Write the body to a temporary file outside the repository and pass it with `--body-file`.
-- Every pull request adds its part record, `docs/progress/parts/IMP-NNN-<part-slug>.md` (IMD-62; fields in [docs/progress/parts/README.md](../progress/parts/README.md)). `docs/progress/sprint-N.md` is compiled from the records by the sprint's gate card.
+- Every pull request adds one part record per part of the card, `docs/progress/parts/IMP-NNN-<part-slug>.md` (IMD-62; fields in [docs/progress/parts/README.md](../progress/parts/README.md)). `docs/progress/sprint-N.md` is compiled from the records by the sprint's gate card.
 
 ## 4. Required checks (`.github/workflows/ci.yml`)
 
@@ -62,7 +64,15 @@ git log origin/main..HEAD --format='%B' | perl -ne 's/CLAUDE\.md|\.claude\///gi;
 
 All jobs run with `AI_PROVIDER=MOCK` and `APP_ENV=test`; no provider key exists in pull-request jobs. Run `make check` locally before pushing.
 
-## 5. Review and merge
+## 5. Review and merge (working agreement, IMD-68)
+
+Branch protection on `main` is saved but not enforced on this plan (PD-K), so GitHub does not stop a merge. The team keeps this working agreement instead:
+
+- Merge only after the named reviewer has approved the pull request from their own account **and** all six required checks (`lint-types`, `unit`, `guards`, `attribution`, `audit`, `api`) are green on the head commit.
+- Merge with Rebase and merge only (IMD-63).
+- Every sprint gate audits the pull requests merged since the previous gate (approval, who approved, whether the reviewer owns a part of the card or is the operator, checks on the merged head) and records any that miss the agreement in `docs/progress/gates.md`.
+
+Further rules:
 
 - One approval from the named reviewer's own account. CODEOWNERS (`.github/CODEOWNERS`) requests Kirtan for `contracts/`, `apps/api/migrations/` and `apps/api/app/schemas/`, and Nidhi for `apps/api/app/ai/`.
 - Merge with **Rebase and merge** only (IMD-63); merge commits and squash merging are disabled. Rebasing keeps each commit's author, so every merged part stays credited to its owner. On `main`, GitHub records its own committer, which is expected.
