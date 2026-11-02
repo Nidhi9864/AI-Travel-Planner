@@ -1,16 +1,21 @@
 """App factory and the ASGI app that `make api` runs (uvicorn app.main:app).
 
 `create_app` applies the start-up checks before anything else, so a bad configuration stops the
-process with a message that names the variable, never its value (FR-124).
+process with a message that names the variable, never its value (FR-124). The lifespan then
+resolves the model provider and the prompt template (§8.4, IMP-208); a ConfigError there also
+stops start-up.
 """
 
 import logging
 import os
 import sys
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.ai.factory import startup_provider
 from app.auth.deps import current_user
 from app.auth.router import router as auth_router
 from app.core.config import ConfigError, Settings, check_settings, get_settings
@@ -34,9 +39,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     for warning in check_settings(settings, os.environ):
         logger.warning(warning)
 
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        try:
+            app.state.model_provider = await startup_provider(settings)
+        except ConfigError as exc:
+            logger.error("configuration error: %s", exc)
+            raise
+        yield
+
     # /docs is enabled in local, test and staging; production serves no OpenAPI page (§6.1).
     docs_enabled = settings.app_env != "production"
     app = FastAPI(
+        lifespan=lifespan,
         title="AI Travel Planner API",
         version=settings.build_version,
         docs_url="/docs" if docs_enabled else None,
