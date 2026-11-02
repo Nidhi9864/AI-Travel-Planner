@@ -63,6 +63,22 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - run: make setup
+      - name: Place quality gate in check mode (no database)
+        # IMP-205 step 4: every destination directory under data/fixtures and data/places passes
+        # the §5.6 quality gate without a database write; a directory without destination.json
+        # (notes only) is skipped.
+        run: |
+          dirs=()
+          for dir in data/fixtures/*/ data/places/*/; do
+            [ -d "$dir" ] || continue
+            if [ -f "${dir}destination.json" ]; then
+              dirs+=("$PWD/${dir%/}")
+            else
+              echo "skipped ${dir%/} (no destination.json)"
+            fi
+          done
+          if [ "${#dirs[@]}" -eq 0 ]; then echo "no destination directory to check"; exit 0; fi
+          cd apps/api && .venv/bin/python -m app.places.seed --check "${dirs[@]}"
       - run: make test-unit
       - run: make test-contract
       - run: make test-web

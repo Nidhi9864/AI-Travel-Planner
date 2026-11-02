@@ -1,8 +1,10 @@
-"""Seed command and the Sampleton SAMPLE fixture (§5.6, IMD-09; IMP-107: TC-110).
+"""Seed command, import pipeline and the Sampleton SAMPLE fixture (§5.6, IMD-09; IMP-107, IMP-205:
+TC-101, TC-108, TC-109, TC-110, TC-112, TC-113).
 
 Database tests run in the rolled-back session of tests/fixtures/db.py, so they hold whether or
-not the test database was already seeded. Format and environment refusals happen before any
-database access.
+not the test database was already seeded. Format and environment refusals and --check runs happen
+before any database access; --check runs work on copies in tmp_path, so the committed report is
+never rewritten by a test.
 """
 
 import shutil
@@ -16,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import reset
 from app.db.models import DataSource, Destination, Place, PlaceOpeningHours
-from app.places import seed
+from app.places import import_pipeline, seed, vocabulary
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SAMPLETON = REPO_ROOT / "data" / "fixtures" / "sampleton"
@@ -99,6 +101,7 @@ async def test_seed_loads_one_sample_destination_with_30_places(db_session: Asyn
     source = await db_session.scalar(select(DataSource).where(DataSource.name == SAMPLE_SOURCE))
     assert source is not None
     assert (source.source_type, source.licence) == ("other", "synthetic test data")
+    assert source.retrieved_on is not None  # PD-IMP-205-1: every source carries a retrieved date
 
     places = list(
         await db_session.scalars(select(Place).where(Place.destination_id == destination.id))
@@ -205,18 +208,28 @@ def broken_copy(tmp_path: Path, file: str, old: str, new: str) -> Path:
 @pytest.mark.parametrize(
     ("file", "old", "new", "message"),
     [
-        ("places.csv", "53.868000", "north", "places.csv line 2: lat is not a number"),
         ("places.csv", "typical_duration_min", "duration", "places.csv line 1: missing columns"),
-        (
-            "places.csv",
-            "sample-002,SAMPLE fixture (synthetic)",
-            "sample-002,Unknown source",
-            "places.csv line 3: source_name 'Unknown source' is not in sources.csv",
-        ),
-        ("opening_hours.csv", "09:00", "9am", "opening_hours.csv line 2: open_time is not a time"),
         ("destination.json", "Europe/London", "Europe/Nowhere", "is not an IANA name"),
+        (
+            "destination.json",
+            '"min_usable_places": 30',
+            '"min_usable_places": "thirty"',
+            "min_usable_places must be a whole number",
+        ),
+        (
+            "opening_hours.csv",
+            "sample-001,1,",
+            "sample-999,1,",
+            "opening_hours.csv line 2: external_ref 'sample-999' is not in places.csv",
+        ),
+        (
+            "sources.csv",
+            "2026-10-31",
+            "31/10/2026",
+            "sources.csv line 2: retrieved_on is not a date",
+        ),
     ],
-    ids=["bad number", "missing column", "unknown source", "bad time", "bad timezone"],
+    ids=["missing column", "bad timezone", "bad minimum", "hours for an unknown place", "bad date"],
 )
 def test_seed_format_error_exits_non_zero(
     clean_settings_env: pytest.MonkeyPatch,
@@ -240,6 +253,194 @@ def test_seed_refuses_sample_data_outside_local_and_test(
     clean_settings_env.setenv("APP_ENV", "staging")
     assert seed.main([str(SAMPLETON)]) == 1
     assert "loaded only when APP_ENV is local or test" in capsys.readouterr().err
+
+
+# ---------- IMP-205: quality gate in the import ----------
+
+
+def edited_copy(tmp_path: Path, file: str, edits: dict[str, str]) -> Path:
+    """A copy of Sampleton where each row starting with a key is replaced by its value."""
+    directory = tmp_path / "edited"
+    if not directory.exists():
+        shutil.copytree(SAMPLETON, directory)
+    path = directory / file
+    lines = path.read_text(encoding="utf-8").splitlines()
+    for prefix, replacement in edits.items():
+        matches = [n for n, line in enumerate(lines) if line.startswith(prefix)]
+        assert matches, prefix
+        lines[matches[0]] = replacement(lines[matches[0]]) if callable(replacement) else replacement
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return directory
+
+
+def set_field(column: str, value: str) -> Any:
+    index = import_pipeline.PLACE_COLUMNS.index(column)
+
+    def edit(line: str) -> str:
+        cells = line.split(",")
+        cells[index] = value
+        return ",".join(cells)
+
+    return edit
+
+
+async def places_by_ref(session: AsyncSession) -> dict[str, Place]:
+    destination = await session.scalar(select(Destination).where(Destination.slug == "sampleton"))
+    assert destination is not None
+    rows = await session.scalars(select(Place).where(Place.destination_id == destination.id))
+    return {str(place.external_ref): place for place in rows}
+
+
+@pytest.mark.asyncio
+async def test_tc_108_rows_without_source_or_verification_status_are_rejected_and_listed(
+    db_session: AsyncSession, tmp_path: Path
+) -> None:
+    directory = edited_copy(
+        tmp_path,
+        "places.csv",
+        {
+            "sample-002,": set_field("source_name", "Unknown source"),
+            "sample-003,": set_field("verification_status", ""),
+        },
+    )
+    prepared = seed.read_fixture(directory)
+
+    assert [(row.line, row.external_ref) for row in prepared.rejected] == [
+        (3, "sample-002"),
+        (4, "sample-003"),
+    ]
+    assert prepared.rejected[0].result.rejects == ["source 'Unknown source' is not in sources.csv"]
+    assert prepared.rejected[1].result.rejects == ["verification_status is missing"]
+    report = import_pipeline.render_report(prepared)
+    assert "| 3 | sample-002 |" in report
+    assert "| 4 | sample-003 |" in report
+
+    await seed.load_fixture(db_session, prepared)
+    stored = await places_by_ref(db_session)
+    assert len(stored) == 28
+    assert "sample-002" not in stored
+    assert "sample-003" not in stored
+
+
+def test_tc_109_the_report_states_rows_read_loaded_and_rejected(
+    clean_settings_env: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    directory = edited_copy(tmp_path, "places.csv", {"sample-010,": set_field("lat", "10.000000")})
+    # --check needs no database: no DATABASE_URL is set here.
+    assert seed.main([str(directory), "--check"]) == 0
+
+    report = (directory / "quality_report.md").read_text(encoding="utf-8")
+    assert "| Place rows read (`places.csv`) | 30 |" in report
+    assert "| Opening-hours rows read (`opening_hours.csv`) | 189 |" in report
+    assert "| Loaded (passed the gate) | 29 |" in report
+    assert "| Rejected | 1 |" in report
+    assert "outside the destination bounding box" in report  # TC-111 through the pipeline
+    out = capsys.readouterr().out
+    assert "gate loaded 29, rejected 1, flagged 0" in out
+    assert "nothing was written to the database" in out
+
+
+def test_the_committed_sampleton_report_is_current() -> None:
+    committed = (SAMPLETON / "quality_report.md").read_text(encoding="utf-8")
+    assert committed == import_pipeline.render_report(seed.read_fixture(SAMPLETON))
+    assert "| Loaded (passed the gate) | 30 |" in committed
+    assert "| Rejected | 0 |" in committed
+    assert "Minimum met: 30 usable places against a minimum of 30." in committed
+
+
+@pytest.mark.asyncio
+async def test_tc_110_a_place_that_now_fails_the_gate_is_deactivated_not_deleted(
+    db_session: AsyncSession, tmp_path: Path
+) -> None:
+    await load(db_session)
+    directory = edited_copy(
+        tmp_path, "places.csv", {"sample-004,": set_field("typical_duration_min", "600")}
+    )
+
+    report = await load(db_session, directory)
+
+    assert report.deactivated == 1
+    assert (report.places.inserted, report.places.unchanged) == (0, 29)
+    stored = await places_by_ref(db_session)
+    assert len(stored) == 30  # never deleted
+    assert stored["sample-004"].is_active is False
+
+    again = await load(db_session)  # the fixed file reactivates it
+    assert again.places.updated == 1
+    assert (await places_by_ref(db_session))["sample-004"].is_active is True
+
+
+@pytest.mark.asyncio
+async def test_tc_112_unparseable_hours_store_unavailable_and_flag_the_row(
+    db_session: AsyncSession, tmp_path: Path
+) -> None:
+    directory = edited_copy(
+        tmp_path,
+        "opening_hours.csv",
+        {"sample-001,1,": lambda line: line.replace("09:00", "9am", 1)},
+    )
+    prepared = seed.read_fixture(directory)
+    assert [row.external_ref for row in prepared.flagged] == ["sample-001"]
+    assert "Flagged (loaded with hours unavailable) | 1 |" in import_pipeline.render_report(
+        prepared
+    )
+
+    await seed.load_fixture(db_session, prepared)
+    place = (await places_by_ref(db_session))["sample-001"]
+    assert place.is_active is True
+    assert place.hours_label == "unavailable"
+    hours = await db_session.scalars(
+        select(PlaceOpeningHours).where(PlaceOpeningHours.place_id == place.id)
+    )
+    assert list(hours) == []
+
+
+def test_tc_113_a_shortfall_is_stated_and_strict_exits_non_zero(
+    clean_settings_env: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    directory = tmp_path / "short"
+    shutil.copytree(SAMPLETON, directory)
+    destination = directory / "destination.json"
+    destination.write_text(
+        destination.read_text(encoding="utf-8").replace(
+            '"min_usable_places": 30', '"min_usable_places": 31'
+        ),
+        encoding="utf-8",
+    )
+
+    assert seed.main([str(directory), "--check"]) == 0  # §5.6: still exits 0 without --strict
+    report = (directory / "quality_report.md").read_text(encoding="utf-8")
+    assert "Shortfall: 30 usable places, 1 below the minimum of 31." in report
+    assert seed.main([str(directory), "--check", "--strict"]) == 1
+    assert "below the minimum for sampleton" in capsys.readouterr().err
+
+
+def test_check_mode_reads_sample_data_in_any_environment(
+    clean_settings_env: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Nothing is written in --check mode, so the SAMPLE refusal applies only to loading.
+    clean_settings_env.setenv("APP_ENV", "staging")
+    directory = tmp_path / "copy"
+    shutil.copytree(SAMPLETON, directory)
+    assert seed.main([str(directory), "--check"]) == 0
+
+
+@pytest.mark.asyncio
+async def test_tc_101_tags_come_from_the_vocabulary_and_unknown_suitability_is_null(
+    db_session: AsyncSession,
+) -> None:
+    await load(db_session)
+    stored = await places_by_ref(db_session)
+
+    tagged = [place for place in stored.values() if place.tags]
+    assert len(tagged) == 30
+    assert all(set(place.tags) <= vocabulary.TAGS for place in tagged)
+    lookout = stored["sample-001"]
+    assert set(lookout.tags) == {"views", "outdoor"}
+    # sample-002 leaves step_free empty: stored as NULL (unknown), never false (TC-102).
+    assert stored["sample-002"].step_free is None
+    assert lookout.step_free is True
+    assert stored["sample-004"].step_free is False
 
 
 # ---------- make db-reset guard (§4.7, §5.7) ----------

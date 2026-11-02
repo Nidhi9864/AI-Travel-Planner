@@ -11,8 +11,9 @@ seed refuses it unless `APP_ENV` is `local` or `test`, because `destination.json
 
 | File | Contents |
 | --- | --- |
-| `destination.json` | `sampleton`, "Sampleton (sample)": invented centre and bounding box out at sea (no town), `Europe/London`, `GBP`, `is_sample: true` |
-| `sources.csv` | One data source, "SAMPLE fixture (synthetic)": `source_type` `other`, licence "synthetic test data", notes `synthetic` |
+| `destination.json` | `sampleton`, "Sampleton (sample)": invented centre and bounding box out at sea (no town), `Europe/London`, `GBP`, `is_sample: true`, `min_usable_places: 30` (the §5.6 fixture minimum checked by the quality gate) |
+| `sources.csv` | One data source, "SAMPLE fixture (synthetic)": `source_type` `other`, licence "synthetic test data", `retrieved_on` 2026-10-31 (the day the fixture was created, IMP-107), notes `synthetic` |
+| `quality_report.md` | Written by the seed's quality gate (IMP-205); regenerate it with `make seed` or `python -m app.places.seed data/fixtures/sampleton --check`, never by hand |
 | `places.csv` | 30 places, `external_ref` `sample-001` to `sample-030`; every name starts with "Sample" or "Fixture" and ends with "(sample)"; `verification_status` `estimated`; prices labelled `estimate`, or `unavailable` with no price |
 | `opening_hours.csv` | Weekly hours (1 = Monday, local time) for 27 places; the other 3 have `hours_label` `unavailable` and no rows |
 
@@ -26,5 +27,8 @@ Counts that tests rely on (IMP-107 step 2):
 | No hours rows, `hours_label` `unavailable` | 3: `sample-003`, `sample-009`, `sample-026` |
 | `step_free` true | 2: `sample-001`, `sample-005` |
 | `price_label` `unavailable` (no price) | 2: `sample-007`, `sample-017` |
+
+Every source, including SAMPLE ones, carries a licence and a `retrieved_on` date: the quality gate
+rejects any place whose source lacks either (IMP-205, PD-IMP-205-1).
 
 Change these files only together with the tests that count them (`apps/api/tests/api/test_seed.py`).
