@@ -55,3 +55,24 @@ protected_modules =
 allowed_importers =
     app.ai.factory
 as_packages = False
+
+; §4.4 Pure domain, first module (IMP-209): app.routing.estimate does no I/O, so it imports no web
+; framework, ORM, HTTP client or vendor SDK, nothing from app.db or app.core, and no router,
+; service or repository. As agreed in RUN-002, each card that creates a pure module listed in §4.4
+; adds it to source_modules here. The wildcards cover the layer modules of every app module,
+; including those created later (import-linter accepts a wildcard that matches nothing yet).
+[importlinter:contract:pure-domain]
+name = Pure domain: app.routing.estimate imports no framework, I/O, core or layer module
+type = forbidden
+source_modules =
+    app.routing.estimate
+forbidden_modules =
+    fastapi
+    sqlalchemy
+    httpx
+    google
+    app.db
+    app.core
+    app.*.router
+    app.*.service
+    app.*.repository
