@@ -10,7 +10,7 @@ This section is the operating procedure for every Claude Code session on the pro
 | --- | --- | --- |
 | 1 | `CLAUDE.md` (CLAUDE.md) | Stack, layout, rules, commands, Definition of Done |
 | 2 | The task card in `docs/spec/TASK_REGISTER.md` (same content as §10) | Objective, prerequisites, files, steps, interfaces, acceptance criteria, tests, evidence |
-| 3 | The contract sections the card's interfaces name: §3 (module), §5 (tables), §6 (endpoints), §7 (screens), §8 and §9 (AI and deterministic rules), §13 (tests) | The shapes that must not change |
+| 3 | The contract sections the card's interfaces name: §3 (module), §5 (tables), §6 (endpoints), §7 (screens), §8 and §9 (AI and deterministic rules), §13 (tests), and `docs/spec/AMENDMENT_A1_AWS_RAG.md`, which wins where it differs | The shapes that must not change |
 | 4 | `docs/progress/parts/` (one record per merged part), `docs/progress/sprint-N.md` (sprint index) and `docs/progress/gates.md` | What is done, blocked or waiting |
 | 5 | `docs/spec/DECISION_REGISTER.md` | Provisional defaults and any decision that changed a contract |
 | 6 | The repository itself: the files the card lists and their neighbours, existing tests, `Makefile`, `.env.example` | What already exists; never assume |
@@ -132,13 +132,13 @@ Severities follow IMD-41: severity 1 blocks a journey or exposes data; severity 
 | Gate | Demonstrably working (environment) | Contracts that must be stable | Tests that must pass | Acceptable known defects | Evidence |
 | --- | --- | --- | --- | --- | --- |
 | SG-1 end of week 1 | Clean clone: `make setup`, `make stack-up`, `make db-up`, `make db-migrate`, `make seed`, `make api`, `make web` work; sign-up, sign-in and sign-out on the local stack; staging `/health` returns 200 or the deployment is recorded as blocked by missing accounts (local) | Repository layout (§4), env names and `.env.example`, Makefile targets, migrations 0001-0006, ModelProvider interface and AI schemas gr-1 and io-1, error envelope | `make check` (lint, types, imports, unit, contract, api incl. drift test) | Staging blocked by accounts, with owner and date | CI run on main; gate entry; screenshot of local sign-in |
-| SG-2 end of week 2 (blueprint Gate 1) | A signed-in user creates a trip, generates with MOCK and sees the saved plan; a generation record exists; destination 1 loaded with its quality report (staging) | OpenAPI contract v1 tagged `contract-v1`; all 36 MVP endpoints declared (501 until built); trip, preference and generation shapes | `make check`, `make test-authz`, `make e2e ARGS='journey'` (skeleton), `make smoke` against staging | Unbuilt endpoints returning 501; UI polish | Tag, CI runs, smoke output, screenshot of the saved plan |
-| SG-3 end of week 3 (blueprint Gate 2) | A Gemini-generated plan for a seeded trip, validated for schema and place IDs, times and totals recalculated by the backend, record naming provider, model and prompt version (staging) | Provider error taxonomy, io-1 v1, generation status values, itinerary read shape | `make check`, provider contract suite with recorded responses, `make smoke`; one recorded manual Gemini run | Warnings in the plan; quality not yet measured. If Gemini is unavailable: the slice is shown with MOCK and labelled so, cause recorded, owners named | Record of the Gemini run (generation ID, model ID), smoke output |
+| SG-2 end of week 2 (blueprint Gate 1) | A signed-in user creates a trip, generates with MOCK and sees the saved plan; a generation record exists; destination 1 loaded with its quality report; both Express services healthy, the release task run and migration 0007 applied (AWS staging, Amendment A1) | OpenAPI contract v1 tagged `contract-v1`; all 36 MVP endpoints declared (501 until built); trip, preference and generation shapes; Item `sources[]` (IMD-116) | `make check`, `make test-authz`, `make e2e ARGS='journey'` (skeleton), `make smoke` against staging | Unbuilt endpoints returning 501; UI polish | Tag, CI runs, smoke output, screenshot of the saved plan |
+| SG-3 end of week 3 (blueprint Gate 2) | A Gemini-generated plan for a seeded trip, validated for schema and place IDs, times and totals recalculated by the backend, record naming provider, model and prompt version; `retrieval_mode = vector` with at least one cited passage shown on the itinerary page (ACC-19) and the retrieval time recorded (NFR-050) (AWS staging) | Provider error taxonomy, io-1 v1 (gr-2 and io-2 from IMP-316), generation status values, itinerary read shape, `ModelProvider.embed_texts` | `make check`, provider contract suite with recorded responses, `make smoke`; one recorded manual Gemini run | Warnings in the plan; quality not yet measured. If Gemini is unavailable: the slice is shown with MOCK and labelled so, cause recorded, owners named | Record of the Gemini run (generation ID, model ID), smoke output |
 | SG-4 end of week 4 (blueprint Gate 3) | Sign-up to a saved, edited itinerary (E2E journey) on staging; provider failure yields the labelled rule-based plan; edits recalculate in one transaction; checkpoint held | Edit request and response shapes with `plan_revision`, finding codes, warning shape, cut-list switch names | `make check`, `make e2e ARGS='journey'`, failure tests at API level, `make smoke` | Features scheduled for Sprints 5 and 6 absent | Checkpoint arithmetic and decision (IMP-499), CI runs, journey recording |
 | SG-5 end of week 5 | Staging GEMINI journey with the ranking explanation (IMP-515, extension) and repair, hours and budget checks, add, replace, lock, breakdown, map, caps and rate limits; first Gemini baseline recorded | Cost estimate shape, alternatives shape, rate-limit and cap behaviour | `make check`, `make e2e`, `make smoke`; provider contract suite for MOCK and recorded GEMINI | Severity 3 and 4 with owners | Gate entry, baseline run record (dataset, provider, SHA) |
 | SG-6 end of week 6: MVP feature freeze | Optimise day order and packing (IMP-612, IMP-613) done with tests or switched off; every MVP and MVP-S requirement Done with tests or switched off by a recorded cut-list decision; zero 501 MVP routes (extension routes may return 501 until SG-7, IMD-37); floor journey green with all switches off and full journey with all on | All MVP contracts frozen; any change needs a decision entry | `make check`, `make e2e` with switches on and off, `make smoke` | Usability findings scheduled for Sprint 7 | `docs/progress/deferred.md`, freeze entry, CI runs |
 | SG-7 end of week 7: release candidate and extension freeze | Every extension (IMP-708 to IMP-713, and any earlier one not yet done) done with tests or switched off and listed; zero 501 routes; ACC-01 to ACC-18 re-run on staging; security pass; accessibility and usability results recorded; final evaluation and cost report on the commit to be tagged; document set drafted | Release configuration for production | `make check`, `make e2e`, `make smoke`, authorization and security suites | Severity 3 and 4 listed in known limitations | Tag `v1.0-rc1`, acceptance record, reports in `docs/test-reports/` |
-| SG-8 week 8: release and demo | Production deployment with GEMINI; deployed smoke tests; demo rehearsed; backup video and saved samples; final checklist CHK-01 to CHK-23 | None may change except severe defect fixes with regression tests | `make check`, `make e2e`, `make smoke` against production | Documented known limitations only | Tag `v1.0-mvp`, `docs/acceptance/final-checklist.md`, smoke output, video file |
+| SG-8 week 8: release and demo | Production deployment on AWS with GEMINI (CHK-24); RAG index built and retrieval report committed (CHK-25); deployed smoke tests; demo rehearsed; backup video and saved samples; final checklist CHK-01 to CHK-25 | None may change except severe defect fixes with regression tests | `make check`, `make e2e`, `make smoke` against production | Documented known limitations only | Tag `v1.0-mvp`, `docs/acceptance/final-checklist.md`, smoke output, video file |
 
 **Contract stability rule.** Once a gate lists a contract as stable, changing it requires a Proposed entry in the decision register, the updated contract files (`contracts/`, migrations, §6 entry) and a passing contract test in the same pull request; the integration lead (Kirtan) approves.
 
@@ -153,21 +153,23 @@ Within a sprint, tasks in the same wave have no prerequisite on each other and c
 | Sprint 1 | Wave 3 | IMP-106 (Malhar, Jeel), IMP-109 (Krrish), IMP-110 (Nidhi) |
 | Sprint 1 | Wave 4 | IMP-107 (Jeel), IMP-108 (Het), IMP-111 (Manya), IMP-112 (Kirtan) |
 | Sprint 1 | Wave 5 | IMP-199 (Kirtan) |
-| Sprint 2 | Wave 1 | IMP-201 (Kirtan), IMP-202 (Jeel), IMP-203 (Manal), IMP-205 (Malhar, Jeel), IMP-207 (Manya), IMP-209 (Junaid) |
+| Sprint 2 | Wave 1 | IMP-201 (Kirtan), IMP-202 (Jeel), IMP-203 (Manal), IMP-205 (Malhar, Jeel), IMP-207 (Manya), IMP-209 (Junaid), IMP-217 (Kirtan), IMP-219 (Het), IMP-311 (Malhar) |
 | Sprint 2 | Wave 2 | IMP-204 (Manal), IMP-206 (Jeel, Malhar), IMP-208 (Nidhi), IMP-214 (Kirtan) |
-| Sprint 2 | Wave 3 | IMP-210 (Het), IMP-212 (Manasvi), IMP-215 (Junaid) |
+| Sprint 2 | Wave 3 | IMP-210 (Het), IMP-212 (Manasvi), IMP-215 (Junaid), IMP-218 (Junaid, Manasvi) |
 | Sprint 2 | Wave 4 | IMP-211 (Het) |
 | Sprint 2 | Wave 5 | IMP-213 (Krrish) |
 | Sprint 2 | Wave 6 | IMP-216 (Kirtan) |
 | Sprint 2 | Wave 7 | IMP-299 (Kirtan) |
 | Sprint 3 | Wave 1 | IMP-301 (Nidhi, Manya), IMP-303 (Manya), IMP-304 (Malhar, Jeel), IMP-307 (Junaid), IMP-310 (Junaid) |
-| Sprint 3 | Wave 2 | IMP-302 (Kirtan), IMP-305 (Nidhi, Het, Krrish) |
-| Sprint 3 | Wave 3 | IMP-306 (Manya, Junaid) |
-| Sprint 3 | Wave 4 | IMP-308 (Manal, Het) |
+| Sprint 3 | Wave 2 | IMP-302 (Kirtan), IMP-305 (Nidhi, Het, Krrish), IMP-312 (Nidhi) |
+| Sprint 3 | Wave 3 | IMP-306 (Manya, Junaid), IMP-313 (Manal) |
+| Sprint 3 | Wave 4 | IMP-308 (Manal, Het), IMP-314 (Krrish, Malhar), IMP-315 (Jeel) |
 | Sprint 3 | Wave 5 | IMP-309 (Manasvi, Het) |
-| Sprint 3 | Wave 6 | IMP-399 (Nidhi) |
+| Sprint 3 | Wave 6 | IMP-316 (Manya, Het) |
+| Sprint 3 | Wave 7 | IMP-317 (Manasvi) |
+| Sprint 3 | Wave 8 | IMP-399 (Nidhi) |
 | Sprint 4 | Wave 1 | IMP-401 (Nidhi), IMP-402 (Malhar, Jeel), IMP-404 (Manal, Junaid), IMP-406 (Manya, Krrish), IMP-410 (Manal, Krrish), IMP-411 (Manal, Krrish), IMP-412 (Manasvi), IMP-413 (Manya) |
-| Sprint 4 | Wave 2 | IMP-403 (Nidhi, Krrish), IMP-405 (Manasvi, Jeel), IMP-407 (Het) |
+| Sprint 4 | Wave 2 | IMP-403 (Nidhi, Krrish), IMP-405 (Manasvi, Jeel), IMP-407 (Het), IMP-318 (Junaid) |
 | Sprint 4 | Wave 3 | IMP-408 (Het, Manasvi), IMP-409 (Manasvi, Het) |
 | Sprint 4 | Wave 4 | IMP-414 (Krrish, Junaid) |
 | Sprint 4 | Wave 5 | IMP-499 (Kirtan) |
@@ -202,7 +204,10 @@ Cross-sprint prerequisites of CODE tasks are listed below; a task whose earlier-
 | IMP-212 | Trip wizard and preference form | IMP-109 |
 | IMP-214 | OpenAPI contract v1 export, generated web client and contract check | IMP-110 |
 | IMP-215 | Two-user authorization suite for every owned route | IMP-108, IMP-106 |
-| IMP-216 | Walking-skeleton end-to-end test and staging deployment | IMP-112 |
+| IMP-216 | Walking-skeleton end-to-end test and staging deployment | IMP-112 (through IMP-217 and IMP-218, Amendment A1) |
+| IMP-217 | AWS staging foundation: RDS PostgreSQL, ECR, SSM, ECS Express services, OIDC deploy role and budget | IMP-112, IMP-113 |
+| IMP-219 | Supabase Auth with an AWS database: auth stub bootstrap and user row mirroring | IMP-106, IMP-108 |
+| IMP-311 | RAG store: pgvector, corpus and chunk tables, item citations and retrieval record (migration 0007) | IMP-106 |
 | IMP-301 | Gemini adapter with structured output, error mapping and recorded-response tests | IMP-208, IMP-113, IMP-111 |
 | IMP-302 | Provider metadata and health in readiness | IMP-201 |
 | IMP-303 | Normalized generation request and prompt content and size control | IMP-204, IMP-111 |
@@ -210,6 +215,9 @@ Cross-sprint prerequisites of CODE tasks are listed below; a task whose earlier-
 | IMP-305 | Full generation pipeline through the active provider with job progress | IMP-210 |
 | IMP-307 | OpenRouteService client with route cache and fallback | IMP-209 |
 | IMP-309 | Day-wise itinerary view with labels | IMP-213 |
+| IMP-312 | Embedding operation on ModelProvider: Gemini and deterministic MOCK embeddings | IMP-207, IMP-208 |
+| IMP-313 | Corpus ingestion and indexing: place and guide documents, chunking, embedding, `make rag-index` | IMP-311, IMP-205 |
+| IMP-316 | Grounded generation: passages in the request, validated citations, saved sources | IMP-214 |
 | IMP-401 | Retries with backoff and circuit breaker in the Gemini adapter | IMP-301 |
 | IMP-402 | Rule-based fallback planner and saved sample itineraries | IMP-304, IMP-209 |
 | IMP-403 | Provider failure, timeout and quota handling end to end with fallback notice | IMP-305 |
@@ -223,6 +231,7 @@ Cross-sprint prerequisites of CODE tasks are listed below; a task whose earlier-
 | IMP-411 | Transport allowance, stay budget and price source labels | IMP-308 |
 | IMP-412 | Loading, empty and error states on every MVP screen | IMP-104 |
 | IMP-413 | Evaluation harness (command line) | IMP-310, IMP-207 |
+| IMP-318 | Retrieval evaluation: recall, hit rate, citation validity and grounding rate | IMP-316, IMP-314 |
 | IMP-501 | Opening-hours check, overpacked days and budget conflicts | IMP-404, IMP-308 |
 | IMP-502 | Bounded repair with at most one model retry | IMP-405, IMP-403 |
 | IMP-503 | Pace presets and grouping nearby places into days | IMP-304, IMP-209 |
@@ -260,7 +269,7 @@ Cross-sprint prerequisites of CODE tasks are listed below; a task whose earlier-
 
 ### 9.3 Team ownership and contribution
 
-Ownership follows the Team Contribution Plan, version 2 (27 October 2026), which extends the plan of 26 October 2026 with the nine selected extensions and replaces the blueprint's role owners (M1 to M10). The ten members own 427 points over 108 cards: Manal, Malhar and Manya 42 each and the others 43 (about 128 focused hours, roughly 16 a week). The original 370 points keep their owners; the 57 extension points were split so that every member gained 5 or 6 points in Sprints 5 to 7, where loads were lowest, and Sprint 8 stays free for the release. Task IDs, prerequisites, files and acceptance criteria of the original cards are unchanged. Every card in §10 names its lead and its parts.
+Ownership follows the Team Contribution Plan, version 2 (27 October 2026), which extends the plan of 26 October 2026 with the nine selected extensions and replaces the blueprint's role owners (M1 to M10). The ten members own 427 points over 108 cards: Manal, Malhar and Manya 42 each and the others 43 (about 128 focused hours, roughly 16 a week). The original 370 points keep their owners; the 57 extension points were split so that every member gained 5 or 6 points in Sprints 5 to 7, where loads were lowest, and Sprint 8 stays free for the release. Task IDs, prerequisites, files and acceptance criteria of the original cards are unchanged. Every card in §10 names its lead and its parts. The point totals below are those of version 2. IMD-65 cut the extensions and Amendment A1 added 33 points; the current plan is in §9.6 (IMD-114).
 
 | Member | Role | Owns | Points | Points by area |
 | --- | --- | --- | --- | --- |
@@ -358,4 +367,31 @@ Where this specification or the blueprint still names a role outside the task ca
 | M9 | Manal |
 | M10 | Manasvi |
 
+### 9.6 Amendment A1 (2 November 2026): AWS hosting and the RAG pipeline
 
+Amendment A1 (`docs/spec/AMENDMENT_A1_AWS_RAG.md`, IMD-99 to IMD-116) makes two changes:
+
+- Hosting moves to AWS: Amazon ECS Express Mode for the web and API containers, Amazon RDS PostgreSQL 16 with pgvector, and Supabase for sign-in only.
+- Itinerary generation becomes a RAG pipeline on the Gemini API.
+
+It adds 11 cards worth 33 points. The nine extension cards stay cut (IMD-65), so the plan is 403 points over 119 cards.
+
+| Member | Plan after IMD-65 | Added by A1 (cards, sprint) | Plan after A1 |
+| --- | --- | --- | --- |
+| Manal | 37 | +3 (IMP-313, S3) | 40 |
+| Het | 37 | +2 (IMP-219, S2), +1 (IMP-316, S3) | 40 |
+| Junaid | 37 | +2 (IMP-218, S2), +2 (IMP-318, S4) | 41 |
+| Malhar | 37 | +3 (IMP-311, S2), +1 (IMP-314, S3) | 41 |
+| Jeel | 37 | +3 (IMP-315, S3) | 40 |
+| Kirtan | 37 | +4 (IMP-217, S2) | 41 |
+| Nidhi | 37 | +3 (IMP-312, S3) | 40 |
+| Manya | 37 | +3 (IMP-316, S3) | 40 |
+| Manasvi | 37 | +2 (IMP-218, S2), +2 (IMP-317, S3) | 41 |
+| Krrish | 37 | +2 (IMP-314, S3) | 39 |
+| **Total** | **370** | **+33** | **403** |
+
+Rules added by the amendment:
+
+1. **AWS cards.** Claude Code writes the scripts, workflows and guides. Kirtan, as the AWS account owner, runs every step that touches the account from his own terminal or AWS CloudShell. Live results are "not verified" until his recorded output is attached.
+2. **DATA rule for guides.** Destination guides (IMP-314, and IMP-603 optionally) are written and reviewed by members. Claude Code only runs the loader and the quality gate.
+3. **RAG order.** The RAG cards follow the order of §9.2: IMP-311 (Sprint 2), then IMP-312 after IMP-301, IMP-313, IMP-315 and IMP-314, IMP-316 after IMP-309, IMP-317, and IMP-318 in Sprint 4. They are MVP and are not on the cut list (IMD-105).

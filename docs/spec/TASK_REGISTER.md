@@ -2,6 +2,15 @@
 
 Canonical ordered task list generated from the implementation specification (§10). Task IDs are stable: a moved task keeps its ID. Statuses and evidence are kept in `docs/progress/sprint-N.md`, not here. Commands are the Makefile targets of CLAUDE.md §5.
 
+**Amendment A1 (2 November 2026; IMD-99 to IMD-116; `docs/spec/AMENDMENT_A1_AWS_RAG.md`).**
+
+- Hosting moves to AWS: ECS Express Mode for the web and API containers, RDS PostgreSQL for the database, and Supabase for sign-in only.
+- Generation becomes a RAG pipeline on the Gemini API with pgvector.
+- New cards: IMP-217, IMP-218, IMP-219 and IMP-311 (Sprint 2); IMP-312 to IMP-317 (Sprint 3); IMP-318 (Sprint 4). Each has a full card below.
+- Cards whose text changed carry an "Amended by A1" line.
+- The nine extension cards stay cut (IMD-65).
+- The plan is now 403 points over 119 cards (Amendment A1 §10.5).
+
 ## Sprint 1 (week 1): Foundation and contracts — gate SG-1
 
 | Task | Title | Type | Lead | Parts (points) | Prerequisites | Points |
@@ -548,6 +557,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** A push to main deploys the web skeleton to Vercel and the API container to Render, connected to the hosted Supabase staging project; /health is reachable and CORS admits only the staging web origin.
 
+**Amended by A1 (2 November 2026):** the hosted half of this card (Render web service, Vercel project, hosted Supabase database, Render deploy hook) is superseded by IMP-217 and IMP-218 (IMD-99, IMD-103). The merged result stands: the Dockerfile, the smoke test, the local-container path and the deploy workflows that skip while unconfigured. IMP-218 rewrites the workflows for AWS.
+
 **Owners and parts:** Kirtan — whole task (5 points); branch `feat/IMP-112-<short>`
 
 **Traces to:** Stories US-002; FR-123; NFR-005, NFR-015, NFR-035
@@ -590,18 +601,27 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Task:** Sprint 1 (week 1) · HUMAN · 3 points · lead Kirtan with Junaid, Nidhi · release MVP
 
-**Objective:** Supabase (staging and production projects), Vercel, Render, Gemini and OpenRouteService accounts exist with a named owner each, keys are in the team password manager, and the Gemini tier and data-use terms are recorded.
+**Objective:** These accounts exist, each with a named owner and with its keys in the team password manager:
+
+- the AWS account (Free plan; IMD-104);
+- one Supabase project used for Auth only (IMD-101);
+- Gemini (generation and embedding models);
+- OpenRouteService.
+
+The Gemini tier, data-use terms and both model identifiers are recorded.
+
+**Amended by A1 (2 November 2026):** AWS replaces Vercel and Render. One Supabase project serves Auth for staging and production, and the database is RDS. Nidhi also records the embedding model.
 
 **Owners and parts**
 
-- Kirtan (lead) — GitHub, Vercel, Render, Supabase accounts and secrets register (1 points)
+- Kirtan (lead) — GitHub, AWS account (Free plan, MFA, budget owner) and auth-only Supabase project, secrets register (1 points)
 - Junaid — OpenRouteService key and email sender (1 points)
-- Nidhi — Gemini API key, model ID and data-use terms (1 points)
+- Nidhi — Gemini API key, generation model ID, embedding model ID and data-use terms (1 points)
 - One branch and pull request per part (`feat/IMP-113-<part>`); the backend, database or AI part merges first
 
 **Traces to:** Stories US-004; NFR-013, NFR-037
 
-**Dependencies:** Prerequisites: none · Downstream: IMP-112, IMP-301
+**Dependencies:** Prerequisites: none · Downstream: IMP-112, IMP-217, IMP-301, IMP-312
 
 **Files**
 
@@ -609,15 +629,22 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Implementation**
 
-1. Team: create the accounts (Supabase projects staging and production per OD-15, Vercel, Render, Google AI Studio for Gemini, OpenRouteService, optional email sender) using team-owned email addresses; record the owner role per account.
+1. Team: create the accounts with team-owned e-mail addresses and record the owner role per account:
+   - AWS account on the Free plan, owned by Kirtan, with root MFA; never enable Organizations, Control Tower or IAM Identity Center (IMD-104);
+   - one Supabase project for Auth only, with e-mail confirmation as decided in step 4 (IMD-101);
+   - Google AI Studio for Gemini;
+   - OpenRouteService;
+   - optional e-mail sender.
+
+   No Vercel or Render account is needed (IMD-99).
 2. Team: store every key in the password manager only; add rows (variable, owner, location, rotation rule) to docs/secrets.md without values.
-3. Nidhi: read the official Gemini pricing and terms pages, record tier (free or paid), data-use terms accepted, rate limits shown, the chosen GEMINI_MODEL_ID and the date in docs/decisions/accounts.md (OD-04, OD-14).
+3. Nidhi: read the official Gemini pricing and terms pages and record in docs/decisions/accounts.md: tier (free or paid), data-use terms accepted, rate limits shown, the chosen GEMINI_MODEL_ID, the chosen GEMINI_EMBEDDING_MODEL_ID (IMD-106), and the date (OD-04, OD-14).
 4. Junaid: decide email confirmation on or off for staging, test one sign-up from a non-team address and record the result.
 5. Claude Code may help only by drafting the docs/decisions/accounts.md template; it never handles key values.
 
 **Interfaces**
 
-- Modules: MOD-P01 · Env: GEMINI_API_KEY, GEMINI_MODEL_ID, ORS_API_KEY, SUPABASE_URL, SUPABASE_JWKS_URL, SUPABASE_JWT_SECRET · Other: OD-04, OD-06, OD-14, OD-15
+- Modules: MOD-P01 · Env: GEMINI_API_KEY, GEMINI_MODEL_ID, GEMINI_EMBEDDING_MODEL_ID, ORS_API_KEY, SUPABASE_URL, SUPABASE_JWKS_URL, SUPABASE_JWT_SECRET · Other: OD-04, OD-06, OD-14, IMD-100, IMD-101, IMD-104 (AWS Free plan)
 
 **Acceptance criteria**
 
@@ -781,8 +808,12 @@ Canonical ordered task list generated from the implementation specification (§1
 | IMP-213 | Generate page with progress and read-only itinerary view (skeleton) | CODE | Krrish | Krrish 1 | IMP-210, IMP-211, IMP-212, IMP-214 | 1 |
 | IMP-214 | OpenAPI contract v1 export, generated web client and contract check | CODE | Kirtan | Kirtan 3 | IMP-203, IMP-110 | 3 |
 | IMP-215 | Two-user authorization suite for every owned route | CODE | Junaid | Junaid 3 | IMP-203, IMP-204, IMP-108, IMP-106 | 3 |
-| IMP-216 | Walking-skeleton end-to-end test and staging deployment | CODE | Kirtan | Kirtan 1 | IMP-213, IMP-215, IMP-112 | 1 |
-| IMP-299 | Sprint 2 gate SG-2 (blueprint Gate 1): walking skeleton on staging | VERIFY | Kirtan | Kirtan 0 | IMP-201, IMP-202, IMP-203, IMP-204, IMP-205, IMP-206, IMP-207, IMP-208, IMP-209, IMP-210, IMP-211, IMP-212, IMP-213, IMP-214, IMP-215, IMP-216 | 0 |
+| IMP-216 | Walking-skeleton end-to-end test and staging deployment | CODE | Kirtan | Kirtan 1 | IMP-213, IMP-215, IMP-218 | 1 |
+| IMP-217 | AWS staging foundation: RDS PostgreSQL, ECR, SSM, ECS Express services, OIDC deploy role and budget | CODE | Kirtan | Kirtan 4 | IMP-112, IMP-113 | 4 |
+| IMP-218 | Web container and AWS deploy workflows with the release task | CODE | Junaid | Junaid 2, Manasvi 2 | IMP-217, IMP-219 | 4 |
+| IMP-219 | Supabase Auth with an AWS database: auth stub bootstrap and user row mirroring | CODE | Het | Het 2 | IMP-106, IMP-108 | 2 |
+| IMP-311 | RAG store: pgvector, corpus and chunk tables, item citations and retrieval record (migration 0007) | CODE | Malhar | Malhar 3 | IMP-106 | 3 |
+| IMP-299 | Sprint 2 gate SG-2 (blueprint Gate 1): walking skeleton on staging | VERIFY | Kirtan | Kirtan 0 | IMP-201, IMP-202, IMP-203, IMP-204, IMP-205, IMP-206, IMP-207, IMP-208, IMP-209, IMP-210, IMP-211, IMP-212, IMP-213, IMP-214, IMP-215, IMP-216, IMP-217, IMP-218, IMP-219, IMP-311 | 0 |
 
 
 ### IMP-201 Readiness endpoint and structured request logging with request IDs
@@ -1242,6 +1273,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** GET API-24 returns the trip's current saved itinerary (days, items, warnings, plan_revision, labels) and GET API-09 returns the caller's most recently saved itinerary reference.
 
+**Amended by A1 (2 November 2026):** every item carries `sources: []` (IMD-116). IMP-316 fills it.
+
 **Owners and parts:** Het — whole task (1 points); branch `feat/IMP-211-<short>`
 
 **Traces to:** Stories US-153; FR-059; NFR-012
@@ -1254,7 +1287,7 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Implementation**
 
-1. Define ItineraryOut per §6 API-24: trip_id, plan_revision, plan_stale, outcome and provider of the source generation, days[{day_number, plan_date, theme (with origin ai), items[{id, position, place{id,name,category,lat,lon}, slot_type, start_time, duration_min, is_locked, note, note_origin, cost{min,max,currency,label}|null, travel_from_prev{minutes, distance_m, mode, source}|null}]}], warnings[] (empty until IMP-405).
+1. Define ItineraryOut per §6 API-24: trip_id, plan_revision, plan_stale, outcome and provider of the source generation, days[{day_number, plan_date, theme (with origin ai), items[{id, position, place{id,name,category,lat,lon}, slot_type, start_time, duration_min, is_locked, note, note_origin, cost{min,max,currency,label}|null, travel_from_prev{minutes, distance_m, mode, source}|null, sources[] (always [] until IMP-316; SourceRef of Amendment A1 §7.1)}]}], warnings[] (empty until IMP-405).
 2. Implement API-24 GET /api/v1/trips/{trip_id}/itinerary (optional query version_id reserved for IMP-610; returns 404 NOT_FOUND with message 'no itinerary yet' when none exists) with owner scoping on the trip.
 3. Implement API-09 GET /api/v1/itineraries/latest returning {trip_id, trip_name, plan_revision, updated_at} for the caller's most recently updated trip that has an itinerary, or 404 when none (full reopen behaviour in IMP-410).
 4. Load days and items with two queries (no N+1) ordered by day_number, position.
@@ -1372,6 +1405,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** `make openapi` writes contracts/openapi.v1.json and regenerates apps/web/lib/api/schema.d.ts, every MVP endpoint of §6 is declared with its request and response models, and CI fails when the committed contract is stale.
 
+**Amended by A1 (2 November 2026):** the Item of `ItineraryOut` (API-24, also in `EditResultOut`) declares `sources[]` of type `SourceRef` `{chunk_id, kind, title, source_name, licence, attribution_text, url, retrieved_on}` (Amendment A1 §7.1, IMD-116). It is part of contract v1 from the start, and IMP-211 returns an empty list until IMP-316. `GenerationOut` (API-23) also declares `retrieval_mode`, `embedding_model_id` and `retrieval_ms` (null until IMP-316).
+
 **Owners and parts:** Kirtan — whole task (3 points); branch `feat/IMP-214-<short>`
 
 **Traces to:** Stories US-007; NFR-033
@@ -1457,11 +1492,13 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** A Playwright journey (sign in, create trip, generate with MOCK, see saved itinerary) passes locally and in the e2e workflow, and the same path is run on staging.
 
+**Amended by A1 (2 November 2026):** staging is the AWS deployment of IMP-217 and IMP-218. The prerequisite IMP-112 becomes IMP-218.
+
 **Owners and parts:** Kirtan — whole task (1 points); branch `feat/IMP-216-<short>`
 
 **Traces to:** Stories US-153; NFR-048
 
-**Dependencies:** Prerequisites: IMP-213, IMP-215, IMP-112 · Downstream: IMP-299, IMP-701
+**Dependencies:** Prerequisites: IMP-213, IMP-215, IMP-218 · Downstream: IMP-299, IMP-701
 
 **Files**
 
@@ -1472,7 +1509,7 @@ Canonical ordered task list generated from the implementation specification (§1
 1. Write e2e/journey.spec.ts: create a confirmed test user (fixtures/users.ts), sign in, create a trip in Sampleton through the wizard, press Generate, wait for completed, assert at least one day with items is shown and the outcome is from provider MOCK.
 2. Make `make e2e` start the API with AI_PROVIDER=MOCK, APP_ENV=test against the local stack database (migrated and seeded) and the web dev server, then run Playwright.
 3. Write .github/workflows/e2e.yml (on push to main and nightly): set up the Supabase CLI, make stack-up, db-migrate against 127.0.0.1:54322, make seed, export keys from `supabase status -o env` into the job environment, run make e2e, upload the Playwright report.
-4. Run the same path manually on staging with AI_PROVIDER=MOCK and record what each layer did (web, API, database, provider interface, generation record row) and the known gaps in docs/progress/sprint-2.md.
+4. Run the same path manually on AWS staging (Amendment A1 §4; deployed by IMP-218) with AI_PROVIDER=MOCK and record what each layer did (web, API, database, provider interface, generation record row) and the known gaps in docs/progress/sprint-2.md.
 
 **Interfaces**
 
@@ -1492,17 +1529,369 @@ Canonical ordered task list generated from the implementation specification (§1
 
 - e2e.yml run link with Playwright report; Staging walkthrough notes in docs/progress/sprint-2.md
 
+### IMP-217 AWS staging foundation: RDS PostgreSQL, ECR, SSM, ECS Express services, OIDC deploy role and budget
+
+**Task:** Sprint 2 (week 2) · CODE · 4 points · lead Kirtan · release MVP (Amendment A1)
+
+**Objective:** A documented, repeatable AWS set-up in ap-south-1 gives the team:
+
+- a private RDS PostgreSQL 16 database that supports pgvector;
+- two ECR repositories;
+- SSM SecureString parameters for every secret;
+- one ECS Express Mode service each for the staging API and the staging web app, behind one shared HTTPS load balancer;
+- an OIDC role that GitHub Actions can assume without stored keys;
+- budget alerts.
+
+**Owners and parts:** Kirtan — whole task (4 points); branch `feat/IMP-217-whole-task`
+
+**Traces to:** Stories US-002, US-004, US-163; FR-123; NFR-005, NFR-013, NFR-015, NFR-035, NFR-049
+
+**Dependencies:** Prerequisites: IMP-112, IMP-113 (AWS account and auth-only Supabase project exist), Amendment A1 §4, IMD-99 to IMD-104 · Downstream: IMP-218, IMP-216, IMP-299, IMP-801
+
+**Files**
+
+- infra/aws/README.md (create)
+- infra/aws/env.sh.example (create)
+- infra/aws/01_budget.sh, 02_rds.sh, 03_ecr.sh, 04_ssm.sh, 05_iam.sh, 06_services.sh (create)
+- infra/aws/services/api.staging.json.tmpl, infra/aws/services/web.staging.json.tmpl (create; complete service configuration with `${IMAGE}` and the other placeholders of Amendment A1 §4.3)
+- docs/guides/aws-setup.md (create)
+- docs/secrets.md (modify)
+- docs/guides/deployment.md (modify)
+- .gitignore (modify: infra/aws/env.sh)
+
+**Implementation**
+
+1. **Scripts.** Write idempotent bash scripts (AWS CLI v2) that:
+   - read the untracked `infra/aws/env.sh` (copied from `env.sh.example`; region `ap-south-1`, account ID, names of §4.1 of Amendment A1);
+   - check that a resource exists before creating it;
+   - print only resource names and ARNs, never a secret value.
+
+   Claude Code writes and checks the scripts. Kirtan runs them from his own terminal or AWS CloudShell. Claude Code never holds AWS credentials and never runs them against the account.
+2. **Budget (01_budget.sh).** A monthly cost budget of USD 50 with e-mail alerts at USD 25 and USD 50 (NFR-049). The guide warns never to enable AWS Organizations, Control Tower or IAM Identity Center on the Free plan.
+3. **Database (02_rds.sh).**
+   - RDS PostgreSQL 16 (current minor), `db.t4g.micro` or the smallest class the plan allows, 20 GB gp3, single-AZ;
+   - publicly accessible = false, backup retention 1 day, deletion protection on, default VPC;
+   - security group `group12-rds` with no inbound rule yet (step 6 adds 5432 from the API service's group);
+   - the master password is set by the owner and is not RDS-managed (an RDS-managed password rotates every 7 days and would leave `DATABASE_URL` stale);
+   - database `travel_staging`. `travel_production` is created later by IMP-801.
+4. **Registry and parameters.**
+   - **03_ecr.sh:** repositories `group12-api` and `group12-web`, scan on push, keep the newest 10 images.
+   - **04_ssm.sh:** creates the SecureString parameters `/group12/staging/DATABASE_URL`, `GEMINI_API_KEY`, `ORS_API_KEY` and, in HS256 mode, `SUPABASE_JWT_SECRET`.
+     - The value is read with `read -s` in the owner's own terminal and passed to `aws ssm put-parameter --cli-input-json file:///dev/stdin` on standard input, never as a command-line argument.
+     - It is never written to a file or echoed.
+     - `DATABASE_URL` ends with `?sslmode=require`.
+5. **Roles (05_iam.sh).**
+   - ECS task execution role `group12-ecs-execution`: ECR pull, CloudWatch Logs, and `ssm:GetParameters` plus `kms:Decrypt` (aws/ssm key) on `/group12/*`.
+   - Express Mode infrastructure role `group12-ecs-infrastructure`, with the AWS managed policy named in the ECS Express Mode documentation.
+   - GitHub OIDC provider `token.actions.githubusercontent.com` and role `group12-github-deploy`:
+     - trust limited to the subjects `repo:het-lathiya/Group12:ref:refs/heads/main`, `repo:het-lathiya/Group12:ref:refs/tags/v*` and `repo:het-lathiya/Group12:environment:production` (a job that uses a GitHub environment presents an environment subject);
+     - permissions exactly as Amendment A1 §4.4, with action names checked against the AWS CLI reference and listed in the guide.
+6. **Services (06_services.sh), in this order.**
+   1. Build and push a first API image from the current main with the IMP-112 Dockerfile.
+   2. Create the Express Mode service `group12-api-staging` from `services/api.staging.json.tmpl`:
+      - port 8000, health check `/health`, 256 CPU units, 512 MiB, minimum and maximum 1 task;
+      - plain environment and SSM `secrets`;
+      - `DB_AUTH_STUB=true`, `AI_PROVIDER=MOCK` until IMP-316 switches it;
+      - Express Mode default networking.
+   3. Read the API service's security group and subnets. Add the inbound rule TCP 5432 from that group on `group12-rds`. Record the group and the subnets as the repository variables `API_TASKS_SECURITY_GROUP` and `AWS_SUBNET_IDS`.
+   4. Read the API service's HTTPS URL. Build the first web image with `NEXT_PUBLIC_API_BASE_URL=<API URL>/api/v1` and the other `NEXT_PUBLIC_*` values (a temporary Dockerfile outside the repository until IMP-218 commits the real one), then push it.
+   5. Create `group12-web-staging` from `services/web.staging.json.tmpl` (port 3000, health check `/`, 256/512, minimum and maximum 1).
+   6. Read the web URL. Set `ALLOWED_ORIGINS` to it in the API template and update the API service with the full rendered configuration.
+   7. Set log retention to 7 days.
+7. **Supabase Auth.** In the auth-only Supabase project, set the Site URL and redirect URLs to the staging web URL and `<web URL>/auth/callback`.
+8. **Repository variables.** Add the repository variables of Amendment A1 §4.4 for staging, including `ECS_EXECUTION_ROLE_ARN`, `ECS_INFRASTRUCTURE_ROLE_ARN`, `AWS_SUBNET_IDS` and `API_TASKS_SECURITY_GROUP`. `docs/secrets.md` lists every secret and variable name with owner and location, and no value.
+9. **Guide.** Write `docs/guides/aws-setup.md`:
+   - the run order and every command with placeholders;
+   - how to verify each resource;
+   - how to stop or tear down (scale to zero or delete services, snapshot and delete RDS);
+   - a cost table built with the AWS Pricing Calculator and marked as an estimate;
+   - what to do if the Free plan refuses a service (stop; team decision per IMD-104).
+10. **Checks.** Check every script with `bash -n` and, when available, `shellcheck`. Update `docs/guides/deployment.md`: the Render and Vercel sections become pointers to the AWS guide (IMD-99).
+
+**Interfaces**
+
+- Modules: MOD-P01
+- Env: DATABASE_URL, GEMINI_API_KEY, ORS_API_KEY, SUPABASE_URL, SUPABASE_JWKS_URL, SUPABASE_JWT_SECRET, ALLOWED_ORIGINS, DB_AUTH_STUB, AI_PROVIDER, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_API_BASE_URL
+- Other: Amendment A1 §4; AWS ECS Express Mode, RDS, ECR, SSM Parameter Store, IAM OIDC, AWS Budgets
+
+**Acceptance criteria**
+
+- The staging API URL answers `GET /health` with 200 over HTTPS and the staging web URL serves the landing page (US-002 AC1, TC-288).
+- RDS is not publicly accessible: a connection attempt from outside the VPC fails, and the API connects with `sslmode=require` (TC-433).
+- The services' task definitions carry `DATABASE_URL`, `GEMINI_API_KEY`, `ORS_API_KEY` (and `SUPABASE_JWT_SECRET` if used) only as SSM references; no secret value is in the repository, an image or plain environment (TC-434, TC-354).
+- Budget alerts at USD 25 and USD 50 exist (NFR-049, TC-435).
+- The deploy role's trust policy admits only main, `v*` tags and the `production` environment of het-lathiya/Group12 (TC-436).
+- Every live criterion is verified from Kirtan's recorded output; until it exists it is reported as "not verified".
+
+**Tests**
+
+- infra/aws/*.sh — script syntax — `bash -n infra/aws/*.sh`
+- apps/api/tests/smoke/test_deployed.py — TC-288, TC-351 — `make smoke URL=<staging API URL>`
+
+**Completion evidence**
+
+- docs/guides/aws-setup.md merged; staging URLs and the /health response in the part record; trust-policy and budget screenshots (no secrets); `aws ecs describe-task-definition` output showing only `secrets` references (values redacted)
+
+### IMP-218 Web container and AWS deploy workflows with the release task
+
+**Task:** Sprint 2 (week 2) · CODE · 4 points · lead Junaid with Manasvi · release MVP (Amendment A1)
+
+**Objective:** The web app has a production container image. A merge to `main` then:
+
+1. builds both images tagged with the commit SHA;
+2. runs the release task (auth stub, migrations, optional seed, RAG index) as a one-off ECS task;
+3. updates the staging services only if the release task succeeds;
+4. passes the deployed smoke test.
+
+A manual run from a tag does the same for production.
+
+**Owners and parts**
+
+- Junaid (lead) — AWS deploy workflows, release task and deployed smoke checks (2 points)
+- Manasvi — Web production image: standalone Next.js Dockerfile and local compose service (2 points)
+- One branch and one pull request for the card (IMD-66); each commit is authored by the owner of the part it belongs to
+
+**Traces to:** Stories US-002, US-163; FR-123; NFR-013, NFR-015, NFR-035, NFR-048
+
+**Dependencies:** Prerequisites: IMP-217, IMP-219, Amendment A1 §4.3 to §4.6, IMD-102, IMD-103 · Downstream: IMP-216, IMP-299, IMP-801
+
+**Files**
+
+- apps/web/next.config.ts (modify; Manasvi)
+- apps/web/Dockerfile (create; Manasvi)
+- apps/web/.dockerignore (create; Manasvi)
+- docker-compose.yml (modify: `web` service; Manasvi; and the `api` service build context; Junaid)
+- .dockerignore at the repository root (create; Junaid: `.git`, `**/node_modules`, `**/.next`, `**/.venv`, `**/.env*`, `infra/aws/env.sh`)
+- .github/workflows/ci.yml (modify only if a job builds the API image: new build context; Junaid)
+- apps/api/Dockerfile (modify: repository-root build context, `data/places` and `data/guides` copied, `BUILD_VERSION` build argument; Junaid)
+- apps/api/scripts/release.sh (create; Junaid)
+- .github/workflows/deploy-staging.yml (modify; Junaid)
+- .github/workflows/deploy-production.yml (modify; Junaid)
+- apps/api/tests/smoke/test_deployed.py (modify; Junaid)
+- docs/guides/deployment.md (modify; Junaid)
+
+**Implementation**
+
+1. **(Manasvi) Web image.**
+   - Set `output: 'standalone'` in `next.config.ts`.
+   - Write a multi-stage `apps/web/Dockerfile` on `node:22-slim`: `npm ci`, `next build` with the four `NEXT_PUBLIC_*` values and `BUILD_VERSION` as build arguments.
+   - The runtime stage copies `.next/standalone`, plus `.next/static` into `.next/static` and `public` into `public` (the standalone output does not include them).
+   - It runs `node server.js` as a non-root user on `PORT` 3000 with `HOSTNAME=0.0.0.0`.
+   - Add `.dockerignore` (node_modules, .next, .env*) and a `web` service in `docker-compose.yml` for local smoke.
+   - The image contains no secret and no `.env` file.
+2. **(Junaid) API image.**
+   - The API image is built from the repository root. Update every place that builds it: the `api` service of `docker-compose.yml` and any CI job.
+   - The root `.dockerignore` keeps `.env` files, virtual environments, `node_modules` and `.git` out of the context.
+   - The image includes `data/places/` and `data/guides/` (when present) and `scripts/release.sh`, and sets `BUILD_VERSION` from the build argument.
+   - It still never migrates on start (IMD-38).
+3. **(Junaid) Release script.** `apps/api/scripts/release.sh` (POSIX sh, `set -eu`) runs:
+   1. `python -m app.db.auth_stub --if-missing`;
+   2. `alembic upgrade head`;
+   3. when `SEED_DIRS` is set, `python -m app.places.seed` for each directory;
+   4. when the module `app.rag.index` exists, `python -m app.rag.index --strict`. Exit code 3 (embedding provider unavailable) is printed as a warning and does not fail the release; exit codes 1 and 2 fail it (Amendment A1 §4.5).
+
+   Each step prints one line and no secret. IMP-313 makes the index step unconditional.
+4. **(Junaid) Deploy workflows.** Rewrite `deploy-staging.yml` (push to main after `ci.yml` succeeds) and `deploy-production.yml` (manual dispatch with a release tag, GitHub environment `production` with Kirtan as required reviewer) as Amendment A1 §4.5:
+   1. OIDC credentials (`aws-actions/configure-aws-credentials`, role from `AWS_DEPLOY_ROLE_ARN`);
+   2. build and push the API image tagged with the SHA;
+   3. run the release task:
+      - read the API service's current task definition, replace the image with the new one and register it as the family `group12-api-<env>-release` (`register-task-definition`), because `run-task` cannot override an image;
+      - run it with `aws ecs run-task` (command override `sh scripts/release.sh`, subnets `AWS_SUBNET_IDS`, security group `API_TASKS_SECURITY_GROUP`, public IP on);
+      - wait, print its CloudWatch log lines into the job log, and fail on a non-zero exit;
+   4. update the API service with `aws ecs update-express-gateway-service`, sending the full configuration rendered from `infra/aws/services/api.<env>.json.tmpl` with the new image, and wait;
+   5. build and push the web image with the environment's `NEXT_PUBLIC_*` values and update the web service the same way from its template;
+   6. `make smoke URL=<API URL>`.
+
+   When a required repository variable is missing, the job ends green with "AWS staging not configured (blocked by IMP-217)" (or "production … IMP-801").
+5. **(Junaid) Smoke tests.** Extend `tests/smoke/test_deployed.py`:
+   - `/health` reports the deployed `BUILD_VERSION`;
+   - `/health/ready` is called when present;
+   - an OPTIONS request from the configured web origin gets the allow header, and one from a foreign origin does not.
+6. **(Junaid) Forced failure.** Add a `workflow_dispatch` input `simulate_release_failure` to `deploy-staging.yml` that replaces the release command with `false`.
+   - Because the OIDC trust admits only `main`, the first real deploy and the forced-failure run happen after this pull request merges.
+   - The operator records both run links, and IMP-299 checks them (TC-437, TC-438).
+   - Before merge, verify the workflow with `actionlint` (if available) and a dry read of every command.
+7. **(Junaid) Guide.** Update `docs/guides/deployment.md`: the deploy flow, rollback (redeploy the previous tag's images; production migrations are forward only) and the local container smoke.
+
+**Interfaces**
+
+- API: API-01, API-02
+- Modules: MOD-P01
+- Env: BUILD_VERSION, PORT, SEED_DIRS, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_API_BASE_URL, NEXT_PUBLIC_FEATURES_DISABLED
+- Other: repository variables of Amendment A1 §4.4; Amazon ECR, ECS Express Mode
+
+**Acceptance criteria**
+
+- After a merge to main, the staging workflow builds both images with the commit SHA, the release task exits 0, both services are updated and `make smoke` passes against the staging API (US-002 AC1, TC-437, TC-288). This is verified on the first main run after merge and recorded at SG-2 (IMP-299).
+- A failing release task stops the workflow before any service update (TC-438), also verified after merge and recorded at IMP-299.
+- The web bundle contains only `NEXT_PUBLIC_*` values and neither image contains a secret or an `.env` file (TC-355, TC-434).
+- CORS admits the staging web origin and refuses another origin (US-002 AC2, NFR-015, TC-351).
+- `docker compose up api web` serves both images locally and `make smoke URL=http://localhost:8000` passes (NFR-035, TC-338).
+
+**Tests**
+
+- apps/api/tests/smoke/test_deployed.py — TC-288, TC-351, TC-437 — `make smoke URL=<staging API URL>`
+- .github/workflows/deploy-staging.yml — TC-438 — `workflow_dispatch with simulate_release_failure=true (recorded run)`
+- apps/web/Dockerfile — TC-338 — `docker compose up -d api web && make smoke URL=http://localhost:8000`
+
+**Completion evidence**
+
+- Links to one successful staging deploy run and one forced-failure run; local container smoke output; image tags equal to the commit SHA
+
+### IMP-219 Supabase Auth with an AWS database: auth stub bootstrap and user row mirroring
+
+**Task:** Sprint 2 (week 2) · CODE · 2 points · lead Het · release MVP (Amendment A1)
+
+**Objective:** With the database on RDS, which has no Supabase auth schema:
+
+- a release command applies the Appendix A.1 auth stub once;
+- with `DB_AUTH_STUB=true`, the first authenticated call of a user created in hosted Supabase Auth creates that user's `auth.users` row (ID only, no e-mail) before the profile;
+- profiles, trips and plans then work exactly as on Supabase.
+
+**Owners and parts:** Het — whole task (2 points); branch `feat/IMP-219-whole-task`
+
+**Traces to:** Stories US-012, US-163; FR-003; NFR-012, NFR-020, NFR-022
+
+**Dependencies:** Prerequisites: IMP-106, IMP-108, Amendment A1 §5.1, IMD-101 · Downstream: IMP-218, IMP-216
+
+**Files**
+
+- apps/api/app/db/auth_stub.py (create)
+- apps/api/app/db/admin.py (create: operator deletion command)
+- apps/api/app/core/config.py (modify: `DB_AUTH_STUB`)
+- the auth module's profile creation code that holds `get_or_create_profile` (modify)
+- .env.example (modify)
+- Makefile (modify: `db-bootstrap`)
+- apps/api/tests/api/test_auth_stub_mirror.py (create)
+
+**Implementation**
+
+1. **Stub command.** `python -m app.db.auth_stub --if-missing`:
+   - connects with `DATABASE_URL` through synchronous psycopg (the `+psycopg` driver suffix is removed from the URL first);
+   - if schema `auth` exists, prints "auth schema present; nothing to do" and exits 0;
+   - otherwise runs the stub SQL file that IMP-106 committed under `apps/api/migrations/sql/`, unchanged and in one transaction, then exits 0;
+   - on any error, exits 1.
+
+   The URL and credentials are never printed.
+2. **Setting.** Add `DB_AUTH_STUB: bool = False` to the settings. Add it to `.env.example` with the comment of Amendment A1 §7.2: `false` on the Supabase CLI local stack, `true` on compose `db`, in test, staging and production.
+3. **Mirroring.** When `DB_AUTH_STUB` is true, `get_or_create_profile` (IMD-14) first runs `insert into auth.users (id) values (:user_id) on conflict (id) do nothing` in the same transaction as the profile insert. The e-mail claim is never written to the database. When false, nothing touches `auth.users`.
+4. **Make target.** Add `make db-bootstrap` = `cd apps/api && .venv/bin/python -m app.db.auth_stub --if-missing && .venv/bin/alembic upgrade head` (Amendment A1 §7.3).
+5. **Tests.** Tests on the compose test database (stub already present):
+   - a token for an unknown user creates the `auth.users` row with `email` null and the profile; a second call creates nothing;
+   - with the setting false, no `auth.users` write happens;
+   - on a fresh database without schema `auth`, `auth_stub --if-missing` creates the stub, and a second run is a no-op;
+   - on a database that has schema `auth`, it is a no-op.
+6. **Deletion command.** `python -m app.db.admin delete-user --user-id <uuid>`:
+   - refuses unless `DB_AUTH_STUB` is true;
+   - deletes the `auth.users` row in one transaction (the delete cascades to the profile, trips and plans) and prints only the number of rows deleted.
+
+   Kirtan runs it as a one-off ECS task for the NFR-022 procedure (Amendment A1 §5.1). Test it on the compose database.
+
+**Interfaces**
+
+- API: API-03 (first call path)
+- Tables: auth.users (stub), profiles
+- Modules: MOD-B02, MOD-D01
+- Env: DB_AUTH_STUB, DATABASE_URL
+
+**Acceptance criteria**
+
+- The first call of a new hosted-Auth user on a stub database creates `auth.users(id)` and the profile; repeat calls create nothing; no e-mail is stored (TC-439, FR-003).
+- `auth_stub --if-missing` applies the stub once, is a no-op afterwards, and is a no-op on a database with schema `auth` (TC-440).
+- `app.db.admin delete-user` removes the user's `auth.users` row and, by cascade, the profile and trips, and refuses when `DB_AUTH_STUB` is false (NFR-022).
+- Existing auth and authorization suites pass unchanged (`make test-authz`).
+
+**Tests**
+
+- apps/api/tests/api/test_auth_stub_mirror.py — TC-439, TC-440 — `make test-api ARGS='-k auth_stub'`
+
+**Completion evidence**
+
+- PR with make check green; test output for TC-439 and TC-440
+
+### IMP-311 RAG store: pgvector, corpus and chunk tables, item citations and retrieval record (migration 0007)
+
+**Task:** Sprint 2 (week 2) · CODE · 3 points · lead Malhar · release MVP (Amendment A1)
+
+**Objective:** Migration `0007_rag_store` creates:
+
+- the pgvector extension and the tables `rag_documents` and `rag_chunks`;
+- `itinerary_items.source_chunk_ids`;
+- the retrieval columns of `ai_generations`.
+
+It also brings the ORM models and the drift test up to date and switches the test database image to `pgvector/pgvector:pg16`, so every environment can store and search 768-dimension embeddings.
+
+**Owners and parts:** Malhar — whole task (3 points); branch `feat/IMP-311-whole-task`
+
+**Traces to:** Stories US-166; FR-136, FR-138; NFR-034
+
+**Dependencies:** Prerequisites: IMP-106, Amendment A1 §5, IMD-107, IMD-110, IMD-113, IMD-115 · Downstream: IMP-313, IMP-315, IMP-316, IMP-299
+
+**Files**
+
+- apps/api/migrations/sql/0007_rag_store.sql (create)
+- apps/api/migrations/sql/down/0007_rag_store.down.sql (create)
+- apps/api/migrations/versions/0007_rag_store.py (create)
+- apps/api/app/db/models/rag.py (create)
+- the ORM model files of `itinerary_items` and `ai_generations` (modify)
+- apps/api/pyproject.toml (modify: `pgvector`)
+- docker-compose.yml (modify: `db` image)
+- .github/workflows/ci.yml (modify: `api` job service image)
+- apps/api/tests/api/test_schema_drift.py (modify if the vector type needs a mapping)
+- apps/api/tests/api/test_rag_store.py (create)
+
+**Implementation**
+
+1. Copy `docs/spec/sql/0007_rag_store.sql` and `docs/spec/sql/down/0007_rag_store.down.sql` unchanged into `apps/api/migrations/sql/` and `migrations/sql/down/` (do not retype them).
+2. Add Alembic revision `0007` (down revision `0006`) that executes the two files as the earlier revisions do; keep one head.
+3. ORM models:
+   - `RagDocument` and `RagChunk` in `app/db/models/rag.py`, with `embedding` typed `pgvector.sqlalchemy.Vector(768)`;
+   - `source_chunk_ids` (`ARRAY(UUID)`, server default `'{}'`) on the itinerary item model;
+   - `retrieval_mode` and `embedding_model_id` on the generation record model.
+
+   Add the Python dependency `pgvector` with a reason in the PR (IMD-115). The drift test must stay green.
+4. Switch the compose `db` service and the CI `api` job service from `postgres:16` to `pgvector/pgvector:pg16`; no other CI change.
+5. On the Supabase CLI local stack, run `make db-migrate` and confirm `select extversion from pg_extension where extname = 'vector'` returns a version; record it in the part record.
+6. Write `tests/api/test_rag_store.py`:
+   - insert a place document and a guide document with chunks, then check that an exact cosine query (`order by embedding <=> :q limit 1`) returns the nearest chunk;
+   - check that the CHECK constraints reject a place document without `place_id`, an embedding without `embedding_model_id`, a 1,201-character chunk and more than three `source_chunk_ids`;
+   - check that browser roles have no privilege on the new tables.
+7. Confirm the CI round trip (`upgrade head`, `downgrade base`, `upgrade head`) passes with 0007.
+
+**Interfaces**
+
+- Tables: rag_documents, rag_chunks, itinerary_items, ai_generations
+- Modules: MOD-D01, MOD-B18
+- Other: pgvector, Amendment A1 §5.3
+
+**Acceptance criteria**
+
+- Migration 0007 applies to a blank PostgreSQL 16 with pgvector and survives the CI round trip; the drift test is green (TC-441, NFR-034).
+- The 0007 checks reject the invalid rows of step 6, and an exact cosine query returns the nearest chunk (TC-442).
+- The compose `db` and the CI `api` job run `pgvector/pgvector:pg16`; the local Supabase stack migrates to head with the extension present.
+
+**Tests**
+
+- apps/api/tests/api/test_rag_store.py — TC-441, TC-442 — `make db-up && make test-api ARGS='-k rag_store'`
+- apps/api/tests/api/test_schema_drift.py — TC-337 — `make test-api ARGS='-k drift'`
+
+**Completion evidence**
+
+- PR with make check green and the CI api job showing 0007 applied; extension version on the local stack recorded in the part record
+
 ### IMP-299 Sprint 2 gate SG-2 (blueprint Gate 1): walking skeleton on staging
 
 **Task:** Sprint 2 (week 2) · VERIFY · 0 points · lead Kirtan · release MVP
 
 **Objective:** The team demonstrates blueprint Gate 1 on staging, tags API contract v1 and records the result.
 
+**Amended by A1 (2 November 2026):** the gate runs on AWS staging and also covers IMP-217, IMP-218, IMP-219 and IMP-311.
+
 **Owners and parts:** Kirtan — whole task (0 points); branch `feat/IMP-299-<short>`
 
 **Traces to:** NFR-012, NFR-034
 
-**Dependencies:** Prerequisites: IMP-201, IMP-202, IMP-203, IMP-204, IMP-205, IMP-206, IMP-207, IMP-208, IMP-209, IMP-210, IMP-211, IMP-212, IMP-213, IMP-214, IMP-215, IMP-216 · Downstream: none
+**Dependencies:** Prerequisites: IMP-201, IMP-202, IMP-203, IMP-204, IMP-205, IMP-206, IMP-207, IMP-208, IMP-209, IMP-210, IMP-211, IMP-212, IMP-213, IMP-214, IMP-215, IMP-216, IMP-217, IMP-218, IMP-219, IMP-311 · Downstream: none
 
 **Files**
 
@@ -1510,8 +1899,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Implementation**
 
-1. On staging with AI_PROVIDER=MOCK: sign in, create a trip, press Generate, see the saved itinerary; confirm in the database that a generation record was written (provider MOCK, template version, mapping version).
-2. Confirm migrations apply to an empty database (CI api job) and destination 1 places are loaded on staging with the quality report (IMP-206).
+1. On AWS staging (Amendment A1 §4) with AI_PROVIDER=MOCK: sign in, create a trip, press Generate, see the saved itinerary; confirm through API-23 that the generation record exists (provider MOCK, model and prompt version), because RDS is private and Claude Code has no AWS access (Amendment A1 §5.1). Also confirm the IMP-218 deploy evidence: one successful staging deploy run with the release-task log, and one forced-failure run that updated no service (TC-437, TC-438).
+2. Confirm migrations 0001 to 0007 apply to an empty database (CI api job) and on staging (release task log), and confirm destination 1 places are loaded on staging with the quality report (IMP-206). Confirm both Express services are healthy, the staging budget alerts exist and the task definitions hold only SSM references (TC-434, TC-435).
 3. Run make check and confirm e2e.yml is green on main; run make test-authz.
 4. Hold the cross-squad contract review; tag the commit `contract-v1` after contracts/openapi.v1.json is reviewed (US-007 AC1).
 5. Record pass / pass with gaps / fail in docs/progress/gates.md under SG-2; if not passed, list gaps with owners for the first two days of Sprint 3 (blueprint §25.4); recalibrate the point scale.
@@ -1526,6 +1915,7 @@ Canonical ordered task list generated from the implementation specification (§1
 - Migrations apply to an empty database; destination 1 is loaded with its quality report.
 - Tag contract-v1 exists on the reviewed commit.
 - CI (ci.yml, e2e.yml) is green on main and the authorization suite passes.
+- AWS staging: the release task succeeded, both services are healthy, `make smoke` passes against the staging API URL and contract v1 declares `sources[]` (Amendment A1 §10.4).
 - SG-2 entry recorded with evidence links.
 
 **Tests**
@@ -1550,7 +1940,13 @@ Canonical ordered task list generated from the implementation specification (§1
 | IMP-308 | Deterministic recalculation of times, durations and trip cost estimate | CODE | Manal | Manal 5, Het 3 | IMP-306, IMP-307 | 8 |
 | IMP-309 | Day-wise itinerary view with labels | CODE | Manasvi | Manasvi 4, Het 1 | IMP-213, IMP-308 | 5 |
 | IMP-310 | Evaluation dataset version 1 (15 trips) | DATA | Junaid | Junaid 3 | IMP-203 | 3 |
-| IMP-399 | Sprint 3 gate SG-3 (blueprint Gate 2): first Gemini itinerary on staging | VERIFY | Nidhi | Nidhi 2 | IMP-301, IMP-302, IMP-303, IMP-304, IMP-305, IMP-306, IMP-307, IMP-308, IMP-309 | 2 |
+| IMP-312 | Embedding operation on ModelProvider: Gemini and deterministic MOCK embeddings | CODE | Nidhi | Nidhi 3 | IMP-301, IMP-207, IMP-208 | 3 |
+| IMP-313 | Corpus ingestion and indexing: place and guide documents, chunking, embedding, `make rag-index` | CODE | Manal | Manal 3 | IMP-311, IMP-312, IMP-205 | 3 |
+| IMP-314 | Destination guides for demo destination 1 | DATA | Krrish | Krrish 2, Malhar 1 | IMP-313, IMP-206 | 3 |
+| IMP-315 | Hybrid retrieval: semantic place scores and guide passages with lexical fallback | CODE | Jeel | Jeel 3 | IMP-304, IMP-312, IMP-313 | 3 |
+| IMP-316 | Grounded generation: passages in the request, validated citations, saved sources | CODE | Manya | Manya 3, Het 1 | IMP-303, IMP-305, IMP-306, IMP-309, IMP-315, IMP-214 | 4 |
+| IMP-317 | Sources on itinerary items | CODE | Manasvi | Manasvi 2 | IMP-316, IMP-309 | 2 |
+| IMP-399 | Sprint 3 gate SG-3 (blueprint Gate 2): first Gemini itinerary on staging | VERIFY | Nidhi | Nidhi 2 | IMP-301, IMP-302, IMP-303, IMP-304, IMP-305, IMP-306, IMP-307, IMP-308, IMP-309, IMP-312, IMP-313, IMP-314, IMP-315, IMP-316, IMP-317 | 2 |
 
 
 ### IMP-301 Gemini adapter with structured output, error mapping and recorded-response tests
@@ -2033,17 +2429,478 @@ Canonical ordered task list generated from the implementation specification (§1
 
 - PR with the dataset, manifest and green unit test.; Review comment by Kirtan confirming coverage.
 
+### IMP-312 Embedding operation on ModelProvider: Gemini and deterministic MOCK embeddings
+
+**Task:** Sprint 3 (week 3) · CODE · 3 points · lead Nidhi · release MVP (Amendment A1)
+
+**Objective:** Every adapter implements `embed_texts(texts, purpose, titles)` and returns 768-dimension, L2-normalised vectors:
+
+- **Gemini** with `GEMINI_EMBEDDING_MODEL_ID` and the prefix or task-type rule of the configured model;
+- **MOCK** with deterministic hashed embeddings and no network;
+- **FINETUNED_MODEL**, which refuses.
+
+The error taxonomy and a start-up check apply. Tests never call Gemini.
+
+**Owners and parts:** Nidhi — whole task (3 points); branch `feat/IMP-312-whole-task`
+
+**Traces to:** Stories US-164; FR-136, FR-137; NFR-031, NFR-043
+
+**Dependencies:** Prerequisites: IMP-301 (the Gemini adapter file exists), IMP-207, IMP-208, Amendment A1 §6.5, IMD-106, IMD-112 · Downstream: IMP-313, IMP-315
+
+**Files**
+
+- apps/api/app/ai/providers/base.py (modify)
+- apps/api/app/schemas/ai.py (modify: `EmbeddingResult`, `EmbeddingPurpose`)
+- apps/api/app/ai/providers/gemini.py (modify)
+- apps/api/app/ai/providers/mock.py (modify)
+- apps/api/app/ai/providers/finetuned.py (modify)
+- apps/api/app/core/config.py (modify: `GEMINI_EMBEDDING_MODEL_ID` and its start-up check)
+- .env.example (modify)
+- apps/api/tests/unit/ai/test_mock_embeddings.py (create)
+- apps/api/tests/contract/test_provider_contract.py (modify)
+- apps/api/tests/unit/ai/test_gemini_embeddings.py (create)
+- apps/api/tests/unit/core/test_config.py (modify)
+
+**Implementation**
+
+1. **Protocol.** Add to the `ModelProvider` protocol: `async embed_texts(texts: Sequence[str], purpose: Literal["document", "query"], titles: Sequence[str | None] | None = None) -> EmbeddingResult`.
+   - `EmbeddingResult`: `vectors: list[list[float]]`, `model_id: str`, `usage: UsageMetadata`, `latency_ms: int`.
+   - Reject an empty list, more than 32 texts or a text over 2,000 characters with `ProviderBadRequest`.
+   - Only `ProviderError` subclasses may escape.
+2. **Gemini.**
+   - One private function holds the vendor call: `client.aio.models.embed_content` with `model = GEMINI_EMBEDDING_MODEL_ID` and `output_dimensionality = 768`.
+   - Each text is sent as its own `Content` object, never as several parts of one content, because `gemini-embedding-2` combines the parts of one content into one embedding. A response whose vector count differs from the text count raises `ProviderInvalidOutput("schema_violation")`.
+   - For `gemini-embedding-2`, prefix queries with `task: search result | query: ` and documents with `title: <title or none> | text: `.
+   - For `gemini-embedding-001`, set `task_type` `RETRIEVAL_QUERY` or `RETRIEVAL_DOCUMENT` and send no prefix.
+   - L2-normalise every vector in code; a vector whose length is not 768 raises `ProviderInvalidOutput("schema_violation")`.
+   - Use the timeout and transient-retry rules of §8.4 and its error mapping.
+   - Never use or open the generation circuit breaker (IMD-112).
+   - Never log text or vectors.
+3. **MOCK** (`mock-embed-v1`). Implement the hashed bag-of-words of Amendment A1 §6.5 exactly:
+   1. lower-case the text, split on non-alphanumerics, drop tokens under 3 characters;
+   2. for each token, `h = sha256(token.encode("utf-8")).hexdigest()`; add `+1` at index `int(h[:8], 16) % 768` when `int(h[8], 16)` is even, else `-1`;
+   3. sum and L2-normalise; an empty text gives the unit vector at index 0.
+   - Add an optional constructor argument `embed_error` (a `ProviderError`) for tests.
+   - `MOCK_PROVIDER_SCENARIO` keeps its seven values and does not affect embeddings.
+4. **FINETUNED_MODEL.** The stub raises `ProviderBadRequest("FINETUNED_MODEL not enabled in Stage 1")`.
+5. **Settings and start-up check.** Add `GEMINI_EMBEDDING_MODEL_ID` to settings and `.env.example` (Amendment A1 §7.2). For `AI_PROVIDER=GEMINI` in staging and production, exit at start-up when it is empty, starts with `<`, or is not `gemini-embedding-2` or `gemini-embedding-001`, naming the variable and never the value. In local and test, empty is allowed.
+6. **Tests.**
+   - Contract tests run over MOCK and over a fake Gemini client:
+     - 768-length unit vectors, order preserved;
+     - one `Content` per text in the received request, plus the purpose/prefix/task-type rule and `output_dimensionality`;
+     - a fake response with fewer vectors than texts raises `ProviderInvalidOutput`;
+     - error mapping for 429 quota, 429 rate, 403, 400 and timeout.
+   - MOCK determinism (same text, same vector; shared words give cosine > 0; no socket opened).
+   - Start-up check cases.
+   - One `@pytest.mark.live` test that embeds two texts with a real key (skipped without one; run only by `make live-smoke`).
+
+**Interfaces**
+
+- Modules: MOD-B05
+- Env: GEMINI_EMBEDDING_MODEL_ID, GEMINI_API_KEY, GEMINI_TIMEOUT_S, GEMINI_MAX_RETRIES, AI_PROVIDER
+- Other: ModelProvider protocol (§8.3), Amendment A1 §6.5
+
+**Acceptance criteria**
+
+- MOCK embeddings are deterministic, 768-dimensional, unit length and make no network call (TC-443).
+- Gemini embedding requests carry the configured model, 768 dimensions and the model's prefix or task type, and returned vectors are normalised (fake client; TC-444); `google.genai` is imported only in `gemini.py` (`make imports`, TC-002).
+- Embedding errors map to the `ProviderError` taxonomy and never open the generation breaker (TC-445).
+- Start-up refuses a missing or unsupported `GEMINI_EMBEDDING_MODEL_ID` for GEMINI in staging and production (TC-446).
+
+**Tests**
+
+- apps/api/tests/unit/ai/test_mock_embeddings.py — TC-443 — `make test-unit ARGS='-k embeddings'`
+- apps/api/tests/unit/ai/test_gemini_embeddings.py — TC-444, TC-445 — `make test-unit ARGS='-k embeddings'`
+- apps/api/tests/contract/test_provider_contract.py — TC-444 — `make test-contract ARGS='-k embed'`
+- apps/api/tests/unit/core/test_config.py — TC-446 — `make test-unit ARGS='-k embedding_model'`
+
+**Completion evidence**
+
+- PR with make check and make imports green; live-smoke result recorded only if a key was used by its owner
+
+### IMP-313 Corpus ingestion and indexing: place and guide documents, chunking, embedding, `make rag-index`
+
+**Task:** Sprint 3 (week 3) · CODE · 3 points · lead Manal · release MVP (Amendment A1)
+
+**Objective:** `make rag-index` turns every active place and every guide file that passes the quality gate into documents and chunks with provenance, and embeds them through the active provider. Re-runs are idempotent: unchanged chunks are not embedded again, and removed documents are deactivated, never deleted. The release task runs the index on every deploy.
+
+**Owners and parts:** Manal — whole task (3 points); branch `feat/IMP-313-whole-task`
+
+**Traces to:** Stories US-166; FR-136; NFR-040
+
+**Dependencies:** Prerequisites: IMP-311, IMP-312, IMP-205, Amendment A1 §6.2 to §6.6, IMD-110, IMD-111 · Downstream: IMP-314, IMP-315, IMP-316
+
+**Files**
+
+- apps/api/app/rag/__init__.py, constants.py, documents.py, guides.py, chunker.py, repository.py, service.py, index.py (create)
+- apps/api/app/places/service.py (modify: `ensure_data_source`)
+- data/fixtures/sampleton/guides/getting-around.md, local-customs.md, food-culture.md (create; synthetic, SAMPLE)
+- docs/guides/rag-corpus.md (create)
+- Makefile (modify: `rag-index`)
+- apps/api/scripts/release.sh (modify: index step unconditional)
+- apps/api/.importlinter (modify: pure modules join the pure-domain contract)
+- apps/api/tests/unit/rag/test_chunker.py, test_guides.py, test_documents.py (create)
+- apps/api/tests/api/test_rag_index.py (create)
+
+**Implementation**
+
+1. **Constants.** `constants.py` holds the constants of Amendment A1 §6.13 (Proposed values).
+2. **Place documents.** `documents.py` (pure) builds the place document of §6.2:
+   - text `<name> (<category>). Tags: … . <description> Area: <address>`, with empty parts omitted;
+   - at most 10 tags, the address cut to 150 characters, and the whole text cut to 1,200 characters at a word boundary;
+   - never prices, hours or URLs from `places`;
+   - `doc_key` `place:<uuid>`, one chunk.
+3. **Guide files.** `guides.py` (pure) parses the flat front matter and body of §6.3 and applies the quality gate:
+   - missing or invalid field, body under 300 or over 6,000 characters, a URL that is not `https`;
+   - currency amounts, clock-time ranges and the hour or travel phrases of §6.3 (warnings, errors with `--strict`).
+
+   Each finding is returned with file and line.
+
+   SAMPLE guides under `data/fixtures/sampleton/guides/` are allowed only when `APP_ENV` is local or test (IMD-15). They use `source_type: curated_manual`, no URL and `licence: synthetic test data`.
+4. **Chunking.** `chunker.py` (pure) implements §6.4: `##` sections, paragraph packing up to 800 characters, sentence and then word fallback, 120-character overlap at a boundary, every chunk 1 to 1,200 characters, `token_estimate = ceil(chars / 4)`, SHA-256 over heading and content.
+5. **Data sources.** Add `places.service.ensure_data_source(name, source_type, licence, url, retrieved_on, attribution_text)`; places writes `data_sources` (§3.9, and Amendment A1 §5.1 amends the seed-only rule of §5.6).
+   - It upserts by name.
+   - A different licence or attribution text for an existing name is a gate error.
+   - Different page URLs are allowed, because each page URL is stored on its own document (`rag_documents.url`).
+6. **Index service.** `service.index(destination_slug | None, check_only, strict)` implements §6.6:
+   1. upsert documents by `doc_key`, re-chunking when the content hash changes;
+   2. upsert chunks by `(document_id, chunk_index)`, clearing the embedding of a changed chunk;
+   3. deactivate chunks and documents that are no longer in the corpus;
+   4. embed missing or other-model chunks in batches of 32 through `ModelProvider.embed_texts(purpose="document", titles=…)`, committing after each batch;
+   5. on a `ProviderError`, stop with exit code 3, keeping the batches already saved.
+7. **CLI.** `index.py`: `python -m app.rag.index [--destination <slug>] [--check] [--strict]`.
+   - It prints a report (documents, chunks, embedded this run, inactive, warnings, errors) with no text and no secret.
+   - Exit codes: 0 success, 1 gate errors in strict mode, 2 usage error, 3 embedding provider unavailable.
+   - Add `make rag-index` (Amendment A1 §7.3).
+8. **Release step.** Make the index step of `scripts/release.sh` unconditional (`python -m app.rag.index --strict`), keeping its rule that exit 3 is a warning and exits 1 and 2 fail the release.
+9. **Curator guide.** Write `docs/guides/rag-corpus.md`: the guide file format, the gate rules and the commands, for curators. Write three short synthetic SAMPLE guides for tests, labelled SAMPLE in their title and source name. This is the only guide text Claude Code may write (Amendment A1 §6.3).
+10. **Import contracts.** Add `app.rag.documents`, `app.rag.guides` and `app.rag.chunker` to the pure-domain contract of `.importlinter`.
+11. **Tests.**
+    - chunker limits, headings and overlap;
+    - each gate rule (including two pages of one source with different URLs passing, and a different licence failing);
+    - place-document content without prices or hours;
+    - indexing the SAMPLE fixture with MOCK embeddings: a second run embeds 0; changing one guide paragraph re-embeds only the changed chunks; deleting a guide sets its document and chunks inactive and keeps the rows.
+
+**Interfaces**
+
+- Tables: rag_documents, rag_chunks, data_sources, places
+- Modules: MOD-B18, MOD-B04, MOD-B05
+- Env: AI_PROVIDER, GEMINI_EMBEDDING_MODEL_ID
+- Other: Amendment A1 §6.2 to §6.6, data/guides/ format
+
+**Acceptance criteria**
+
+- Every active place and every gate-passing guide of the SAMPLE fixture is chunked and embedded with the active embedding model, and each chunk resolves to its document and data source (FR-136 AC1, TC-449).
+- A guide with missing provenance, out-of-range length or a price, hour or travel-time statement fails the strict gate and is not indexed (FR-136 AC2, TC-448).
+- Re-running embeds only new or changed chunks; removed documents are deactivated, never deleted (FR-136 AC3, TC-449).
+- Chunker limits, headings and overlap hold (TC-447).
+
+**Tests**
+
+- apps/api/tests/unit/rag/test_chunker.py — TC-447 — `make test-unit ARGS='-k chunker'`
+- apps/api/tests/unit/rag/test_guides.py — TC-448 — `make test-unit ARGS='-k guides'`
+- apps/api/tests/api/test_rag_index.py — TC-449 — `make test-api ARGS='-k rag_index'`
+
+**Completion evidence**
+
+- PR with make check green; `make rag-index ARGS='--destination sampleton'` report pasted in the part record (first and second run)
+
+### IMP-314 Destination guides for demo destination 1
+
+**Task:** Sprint 3 (week 3) · DATA · 3 points · lead Krrish with Malhar · release MVP (Amendment A1)
+
+**Objective:** Demo destination 1 has 8 to 15 guide documents in `data/guides/<slug>/`, written by the team from cited sources. Every document passes the guide quality gate in strict mode and has been checked against its source by a second member. The release task indexes them on staging.
+
+**Owners and parts**
+
+- Krrish (lead) — Research and write the destination 1 guide documents with sources (2 points)
+- Malhar — Source and licence review, strict quality-gate run and quality report (1 points)
+- One branch and one pull request for the card (IMD-66); each commit is authored by the owner of the part it belongs to
+
+**Traces to:** Stories US-164, US-166; FR-136; NFR-040
+
+**Dependencies:** Prerequisites: IMP-313, IMP-206, Amendment A1 §6.3, IMD-111 · Downstream: IMP-399, IMP-318
+
+**Files**
+
+- data/guides/<slug>/*.md (create; Krrish)
+- data/guides/<slug>/quality_report.md (create; Malhar)
+
+**Implementation**
+
+1. **(Krrish) Topics.** Choose 8 to 15 topics from Amendment A1 §6.3 (getting around, neighbourhoods, customs and etiquette, safety and health, accessibility, food culture, seasonal notes, day-trip context). Write one file per topic, 300 to 6,000 characters (aim for 1,000 to 4,000), with `##` headings.
+2. **(Krrish) Writing rules.**
+   - Write in your own words from the cited public source; keep any quote short. Wikivoyage text may be adapted under CC BY-SA 4.0 with `attribution_text`.
+   - Fill every front-matter field.
+   - No prices, no opening hours, no travel times and no booking claims; those facts live in `places` and code.
+3. **(Malhar) Review.**
+   - Open each source and confirm that every statement in the file is supported by it and that the licence is recorded correctly.
+   - Run `make rag-index ARGS='--destination <slug> --check --strict'` on a local database.
+   - Write `quality_report.md`: files, sources, licences, reviewer and date, gate result.
+4. **Claude Code's role.** Claude Code may only create the folder, run the gate and report findings. It never writes or edits guide content and never fills a source (DATA rule).
+5. **Staging.** After merge, the next staging deploy indexes the guides. The release-task log printed by the deploy workflow shows the index report line (chunks embedded), and IMP-399 records it, because it can only exist after merge.
+
+**Interfaces**
+
+- Tables: rag_documents, rag_chunks, data_sources
+- Modules: MOD-D02, MOD-B18
+- Other: data/guides/ format (Amendment A1 §6.3)
+
+**Acceptance criteria**
+
+- Destination 1 has 8 to 15 guide files that pass `make rag-index ARGS='--destination <slug> --check --strict'` (FR-136 AC2, TC-450).
+- Each file is traced to its source by the reviewer, recorded in `quality_report.md` (TC-450).
+- After the staging deploy, the index report shows the guide chunks embedded with the active embedding model (FR-136 AC1); this is verified after merge and recorded at IMP-399.
+
+**Tests**
+
+- data/guides/<slug>/ — TC-450 — `make rag-index ARGS='--destination <slug> --check --strict'`
+
+**Completion evidence**
+
+- data/guides/<slug>/quality_report.md; strict gate output; staging release-task index line
+
+### IMP-315 Hybrid retrieval: semantic place scores and guide passages with lexical fallback
+
+**Task:** Sprint 3 (week 3) · CODE · 3 points · lead Jeel · release MVP (Amendment A1)
+
+**Objective:** For each generation, the trip's preferences are embedded once, and the generation then gets:
+
+- a semantic score for every candidate place, which reorders candidates inside the deterministic ranking (mapping `pm-2`) without changing hard filters or must-visit retention;
+- up to six diverse guide passages and up to six place passages.
+
+Any embedding failure, or a missing index, falls back to lexical ranking, and the mode is recorded.
+
+**Owners and parts:** Jeel — whole task (3 points); branch `feat/IMP-315-whole-task`
+
+**Traces to:** Stories US-164; FR-137, FR-027, FR-028; NFR-002, NFR-050
+
+**Dependencies:** Prerequisites: IMP-304, IMP-312, IMP-313, Amendment A1 §6.7, §6.11, IMD-107, IMD-108, IMD-112 · Downstream: IMP-316, IMP-318, IMP-399
+
+**Files**
+
+- apps/api/app/rag/query.py, mmr.py (create)
+- apps/api/app/rag/service.py (modify: `retrieve`)
+- apps/api/app/rag/repository.py (modify: similarity queries)
+- apps/api/app/generation/retrieval.py (modify)
+- apps/api/app/generation/ranking.py (modify: `c_semantic`)
+- apps/api/app/trips/preference_mapping.py (modify: `MAPPING_VERSION = 'pm-2'` and weights)
+- apps/api/.importlinter (modify)
+- apps/api/tests/unit/rag/test_query.py, test_mmr.py (create)
+- apps/api/tests/unit/generation/test_ranking.py (modify)
+- apps/api/tests/api/test_rag_retrieval.py (create)
+
+**Implementation**
+
+1. **Query text.** `query.py` (pure): `build_query_text(...)` exactly as Amendment A1 §6.7, from the trip's destination name, preferences, group needs, step-free flag and the redacted `notes_quoted`; at most 1,000 characters; deterministic.
+2. **MMR.** `mmr.py` (pure): maximal marginal relevance over candidate vectors (λ = 0.7, k = 6, at most 2 chunks per document); ties are broken by chunk ID.
+3. **Similarity queries.** `rag/repository.py`: two parameterised exact-cosine queries over active chunks of the destination whose `embedding_model_id` equals the active embedding model:
+   - place similarity, as the maximum over each candidate's chunks;
+   - the top 20 guide chunks with their vectors.
+
+   No approximate index (IMD-107).
+4. **Retrieve.** `rag.service.retrieve(ctx) -> RetrievalResult`:
+   1. embed the query once with `purpose="query"`;
+   2. compute place similarities for the candidates that passed the hard filters;
+   3. select guide passages by MMR;
+   4. return the best chunk of every candidate place (`place_best_chunk`), because `app.rag` must not import the generation ranking (Amendment A1 §8.2); IMP-316 picks the top 6 after ranking;
+   5. record `mode`, `embedding_model_id` and `retrieval_ms`.
+
+   On any `ProviderError`, or when no chunk of the destination carries the active embedding model, return `mode = lexical_fallback` with no similarities and no passages, and log the error kind at WARNING without text.
+5. **Ranking.** `ranking.py` gains `c_semantic`: min-max normalised similarity over the candidates (0.5 when all are equal or there is a single candidate; 0 without an embedded chunk). `ScoreParts` gains `semantic`.
+6. **Weights.** Weights `pm-2` in `preference_mapping.py` (the only source, IMD-29): interest 0.30, semantic 0.20, price 0.25, distance 0.15, pace 0.10, signal 0.00. `budget_priority = saving` moves 0.10 from interest to price. In lexical fallback the semantic weight is 0 and the rest are renormalised. Hard filters, must-visit retention, shortlist size and the tie-break are unchanged. `mapping_version` becomes `pm-2` in new generation records.
+7. **Pipeline.** `generation/retrieval.py` calls `rag.service.retrieve` before ranking and passes the result on for IMP-316. Retrieval never raises to the pipeline. The pipeline stores `retrieval_ms` with the result so that IMP-316 can write it to the generation record.
+8. **Import contract.** Add `app.rag.query` and `app.rag.mmr` to the pure-domain contract.
+9. **Tests.**
+   - On the SAMPLE fixture with MOCK embeddings, a trip whose interests or notes share words with one place's document ranks that place higher in vector mode than in lexical mode (same inputs give the same order twice).
+   - A failing query embedding (`embed_error`) and an empty index both give `lexical_fallback`, and the generation still completes.
+   - MMR keeps at most 2 chunks per guide document.
+   - Must-visit places stay when their similarity is lowest.
+   - `retrieval_ms` is set.
+
+**Interfaces**
+
+- Tables: rag_chunks, rag_documents, places, trip_preferences, trip_places
+- Modules: MOD-B18, MOD-B06, MOD-B03, MOD-B05
+- Env: AI_PROVIDER, GEMINI_EMBEDDING_MODEL_ID
+- Other: Amendment A1 §6.7, §6.11
+
+**Acceptance criteria**
+
+- Vector mode ranks a place matching the trip's interests or notes higher than lexical mode, and the order is deterministic (FR-137 AC1 and AC2, TC-451).
+- Hard filters and must-visit places are unchanged by the semantic component (FR-137 AC2, FR-027 AC2).
+- When the query embedding fails or the destination has no embeddings, the generation completes with `retrieval_mode = lexical_fallback` (FR-137 AC3, TC-452).
+- Guide passages hold at most two chunks per document (TC-453).
+- Retrieval timing is recorded for the NFR-050 measurement at SG-3 (TC-459).
+
+**Tests**
+
+- apps/api/tests/unit/rag/test_query.py, test_mmr.py — TC-453 — `make test-unit ARGS='-k "rag and (query or mmr)"'`
+- apps/api/tests/unit/generation/test_ranking.py — TC-451 — `make test-unit ARGS='-k ranking'`
+- apps/api/tests/api/test_rag_retrieval.py — TC-451, TC-452, TC-459 — `make test-api ARGS='-k rag_retrieval'`
+
+**Completion evidence**
+
+- PR with make check green; shortlist of the SAMPLE trip with score parts in vector and lexical mode pasted in the part record
+
+### IMP-316 Grounded generation: passages in the request, validated citations, saved sources
+
+**Task:** Sprint 3 (week 3) · CODE · 4 points · lead Manya with Het · release MVP (Amendment A1)
+
+**Objective:** The generation request carries the retrieved passages as quoted reference data (`gr-2`, template `itinerary_generate/v2`). The model may cite up to three of them per item (`io-2`). Code drops any citation that was not supplied, the generation record names the retrieval mode and embedding model, and the itinerary service saves each item's validated citations and returns them as `sources[]` in API-24.
+
+**Owners and parts**
+
+- Manya (lead) — gr-2 and io-2 schemas, template v2, passage size control, citation check, retrieval fields on the generation record, MOCK citations (3 points)
+- Het — Save validated citations on items and return `sources[]` in API-24 (1 points)
+- One branch and one pull request for the card (IMD-66); each commit is authored by the owner of the part it belongs to
+
+**Traces to:** Stories US-164, US-165; FR-138, FR-139, FR-032, FR-035; NFR-016, NFR-020, NFR-042
+
+**Dependencies:** Prerequisites: IMP-303, IMP-305, IMP-306, IMP-309, IMP-315, IMP-214, Amendment A1 §6.8 to §6.12, IMD-109, IMD-110 · Downstream: IMP-317, IMP-318, IMP-399
+
+**Files**
+
+- apps/api/app/schemas/ai.py (modify: gr-2, io-2; Manya)
+- contracts/ai/gr-2.schema.json, contracts/ai/io-2.schema.json (create beside the unchanged gr-1 and io-1 files; Manya)
+- apps/api/app/ai/prompts/templates/itinerary_generate/v2/system.txt, user.txt, repair.txt, meta.json (create; Manya)
+- docs/model-change-log.md (modify; Manya)
+- apps/api/app/generation/request_builder.py (modify; Manya)
+- apps/api/app/ai/limits.py (modify; Manya)
+- apps/api/app/validation/output_check.py (modify; Manya)
+- apps/api/app/generation/pipeline.py (modify; Manya)
+- apps/api/app/ai/providers/mock.py (modify; Manya)
+- .env.example (modify: `PROMPT_TEMPLATE_VERSION=v2`; Manya)
+- infra/aws/services/api.staging.json.tmpl (modify: `PROMPT_TEMPLATE_VERSION=v2` and, when the Gemini key exists, `AI_PROVIDER=GEMINI` with `GEMINI_MODEL_ID` and `GEMINI_EMBEDDING_MODEL_ID` from docs/decisions/accounts.md; Manya, with Kirtan informed)
+- apps/api/tests/unit/generation/test_request_builder.py (modify; Manya)
+- apps/api/tests/unit/validation/test_output_check.py (modify; Manya)
+- apps/api/tests/unit/validation/test_injection_cases.py (modify; Manya)
+- apps/api/app/itinerary/service.py (modify; Het)
+- apps/api/app/itinerary/repository.py (modify; Het)
+- apps/api/app/itinerary/schemas.py (modify; Het)
+- apps/api/app/rag/service.py (modify: `resolve_sources`; Het)
+- apps/api/tests/api/test_itinerary.py (modify; Het)
+
+**Implementation**
+
+1. **(Manya) Schemas.**
+   - `gr-2` = `gr-1` + `context_passages[]` (0 to 12: `passage_id`, `kind`, `title` ≤ 120, `text` = the whole chunk ≤ 1,200, `place_id` or null) + `retrieval {mode, embedding_model_id}`; `input_schema_version` `gr-2`.
+   - `io-2` = `io-1` + `days[].items[].source_ids` (0 to 3 strings, default empty); `output_schema_version` `io-2`.
+   - Same wire-schema rules as §8.7.
+   - gr-2 and io-2 are added beside gr-1 and io-1, which stay unchanged. `make openapi` exports all four.
+   - The active template's `meta.json` selects the pair the request builder and the output parser use: v1 uses gr-1 and io-1, v2 uses gr-2 and io-2.
+   - The fallback planner returns io-2 with empty `source_ids`.
+2. **(Manya) Request building.** `request_builder` fills `context_passages` from the `RetrievalResult` of IMP-315: guide passages in MMR order, then the `place_best_chunk` of each of the top 6 shortlisted places after ranking (`RAG_TOP_K_PLACE`). It also fills `retrieval`. The place `description` is sent only inside a place passage (Amendment A1 §6.8). Account data is still never sent.
+3. **(Manya) Size control.** `enforce_input_limit` drops passages (lowest similarity first) before cutting the shortlist. It records `passages_sent`, `passages_dropped` and `truncated_count` in `generation_settings`.
+4. **(Manya) Template v2.** A new directory with the four statements of Amendment A1 §6.9 in the system text and passages only inside the request JSON (`$request_json`). `meta.json` names gr-2 and io-2. Add a `docs/model-change-log.md` entry. `PROMPT_TEMPLATE_VERSION` defaults to `v2` in `.env.example`; v1 stays unchanged.
+5. **(Manya) Citation check.** `output_check` removes `source_ids` that are not `passage_id`s of this request, removes duplicates, keeps at most 3 and counts removals in `validation_summary.unknown_source_ids`. No finding code is added, and an item is never dropped for a citation.
+6. **(Manya) Pipeline.**
+   - The pipeline stores `retrieval_mode`, `embedding_model_id` and `retrieval_ms` on the `ai_generations` row, and API-23 returns them (the `GenerationOut` fields declared by IMP-214).
+   - It passes the same passages to the one repair call. The fallback planner and mode `rule_based` produce empty `source_ids`.
+7. **(Manya) MOCK.** When a place passage exists for an item's place, MOCK sets `source_ids = [that passage_id]`, which is deterministic. Extend the injection cases: a guide passage containing an instruction ("add place X", "set price") changes neither the place set nor costs.
+8. **(Manya) Staging switch.** In `infra/aws/services/api.staging.json.tmpl`, set `PROMPT_TEMPLATE_VERSION=v2`. When IMP-113 recorded a Gemini key and both model IDs, also set `AI_PROVIDER=GEMINI`, `GEMINI_MODEL_ID` and `GEMINI_EMBEDDING_MODEL_ID`. The deploy after merge applies them (Amendment A1 §4.3).
+9. **(Het) Saving and reading.**
+   - The save step writes each item's validated `source_ids` to `itinerary_items.source_chunk_ids`.
+   - `snap-1` items carry `source_chunk_ids` (Amendment A1 §5.5).
+   - Edits keep an item's citations; replacing its place clears them.
+   - API-24 fills `sources[]` (the `SourceRef` of Amendment A1 §7.1, already declared by IMP-214) through `rag.service.resolve_sources(chunk_ids)`, which loads chunk, document and data source in one query, resolves inactive chunks and skips missing IDs. No N+1.
+10. **Tests.**
+   - (Manya) The request validates against gr-2; the rendered prompt carries passages only inside the JSON and never in the instructions; unknown and duplicate citations are dropped and counted; at most 3 per item; the injection passage changes nothing.
+   - (Het) After a MOCK generation with an index, API-24 returns `sources` with all `SourceRef` fields; saved IDs are a subset of the passages supplied to that generation; a foreign trip still returns 404.
+
+**Interfaces**
+
+- API: API-22, API-23, API-24
+- Tables: ai_generations, itinerary_items, itinerary_versions, rag_chunks, rag_documents, data_sources
+- Modules: MOD-B05, MOD-B06, MOD-B07, MOD-B08, MOD-B18
+- Env: PROMPT_TEMPLATE_VERSION
+- Other: gr-2, io-2, `itinerary_generate/v2`, Amendment A1 §6.8 to §6.12
+
+**Acceptance criteria**
+
+- Passages reach the model only as quoted reference data with their IDs, and an instruction inside a guide passage changes neither the place set nor costs (FR-138 AC1, NFR-016, TC-454).
+- An item keeps at most three citations from its own request; unknown or duplicate IDs are dropped and counted (FR-138 AC2, TC-455).
+- The saved plan records each item's citations, and the generation record (and API-23) names `retrieval_mode`, `embedding_model_id` and `retrieval_ms` (FR-138 AC3, NFR-042, TC-459).
+- API-24 returns, per item, `sources[]` with title, kind, source name, licence or attribution, URL and retrieval date (FR-139 AC1, TC-456).
+- `make openapi-check` is green with gr-1, io-1, gr-2 and io-2.
+
+**Tests**
+
+- apps/api/tests/unit/generation/test_request_builder.py — TC-454 — `make test-unit ARGS='-k request_builder'`
+- apps/api/tests/unit/validation/test_output_check.py — TC-455 — `make test-unit ARGS='-k output_check'`
+- apps/api/tests/unit/validation/test_injection_cases.py — TC-454 — `make test-unit ARGS='-k injection'`
+- apps/api/tests/api/test_itinerary.py — TC-456 — `make test-api ARGS='-k itinerary'`
+
+**Completion evidence**
+
+- PR with make check and make openapi-check green; one rendered v2 prompt for the SAMPLE trip (no account data) and one API-24 response with sources pasted in the part records
+
+### IMP-317 Sources on itinerary items
+
+**Task:** Sprint 3 (week 3) · CODE · 2 points · lead Manasvi · release MVP (Amendment A1)
+
+**Objective:** The itinerary page shows, under each AI-written note, the sources the note relies on: title, kind, source name, licence or attribution, retrieval date and a safe link. Items without citations show nothing extra.
+
+**Owners and parts:** Manasvi — whole task (2 points); branch `feat/IMP-317-whole-task`
+
+**Traces to:** Stories US-165; FR-139, FR-035; NFR-025, NFR-040
+
+**Dependencies:** Prerequisites: IMP-316, IMP-309, Amendment A1 §7.1 · Downstream: IMP-399, IMP-609
+
+**Files**
+
+- apps/web/components/itinerary/ItemSources.tsx (create)
+- apps/web/components/itinerary/ItineraryItemCard.tsx (modify)
+- apps/web/tests/unit/itinerary/ItemSources.test.tsx (create)
+
+**Implementation**
+
+1. **Component.** `ItemSources` takes the item's `sources` from the generated client types (`SourceRef`) and renders nothing when the list is empty.
+2. **Disclosure.** A button "Sources (n)" with `aria-expanded` and `aria-controls`, operable with Enter and Space, toggles a list.
+3. **List items.** Each item shows the title, a kind label ("Guide" or "Place record"), the source name, the licence or `attribution_text` and the retrieval date (formatted with `lib/format`).
+4. **Links.** When `url` is set, the title is a link with `target="_blank"` and `rel="noopener noreferrer"`, and only `https` URLs are rendered as links. No chunk ID or similarity is shown.
+5. **Placement.** `ItineraryItemCard` renders `ItemSources` directly under the note when `note_origin` is `ai`. The AiBadge stays on the note.
+6. **Tests.** Component tests:
+   - list rendered from a fixture;
+   - empty list renders nothing;
+   - keyboard toggle;
+   - link attributes;
+   - a non-https URL is shown as text;
+   - axe finds no violation.
+
+**Interfaces**
+
+- API: API-24
+- Modules: MOD-F04, MOD-F07
+- Components: ItineraryItemCard, ItemSources, AiBadge
+
+**Acceptance criteria**
+
+- The itinerary page shows each AI-written note's sources, and items without citations show none (FR-139 AC2, TC-457).
+- Source links open outside the app with `noopener noreferrer`, and no internal ID is shown as text (FR-139 AC3, TC-457).
+- The disclosure works by keyboard, and axe reports no violation (NFR-025, TC-457).
+
+**Tests**
+
+- apps/web/tests/unit/itinerary/ItemSources.test.tsx — TC-457 — `make test-web ARGS='ItemSources'`
+
+**Completion evidence**
+
+- PR with make check green; screenshots at 375 px and 1280 px of an item with sources (MOCK, local stack)
+
 ### IMP-399 Sprint 3 gate SG-3 (blueprint Gate 2): first Gemini itinerary on staging
 
 **Task:** Sprint 3 (week 3) · VERIFY · 2 points · lead Nidhi · release MVP
 
 **Objective:** Sprint gate SG-3 (blueprint Gate 2) is decided and recorded: a Gemini-generated itinerary for a seeded trip is visible on staging after schema and place-ID validation and backend recalculation, or the documented fallback rule is applied.
 
+**Amended by A1 (2 November 2026):** staging is AWS, and the gate checks the RAG pipeline (IMP-312 to IMP-317).
+
 **Owners and parts:** Nidhi — whole task (2 points); branch `feat/IMP-399-<short>`
 
 **Traces to:** enabling work (no requirement)
 
-**Dependencies:** Prerequisites: IMP-301, IMP-302, IMP-303, IMP-304, IMP-305, IMP-306, IMP-307, IMP-308, IMP-309 · Downstream: none
+**Dependencies:** Prerequisites: IMP-301, IMP-302, IMP-303, IMP-304, IMP-305, IMP-306, IMP-307, IMP-308, IMP-309, IMP-312, IMP-313, IMP-314, IMP-315, IMP-316, IMP-317 · Downstream: none
 
 **Files**
 
@@ -2054,9 +2911,16 @@ Canonical ordered task list generated from the implementation specification (§1
 1. Confirm IMP-301 to IMP-309 are done in docs/progress/sprint-3.md with evidence links; IMP-302 and IMP-310 may slip to Sprint 4 without failing the gate (blueprint §25.5).
 2. Deploy main to staging with AI_PROVIDER=GEMINI; run make smoke URL=<staging api> and record the result.
 3. On staging, as a test account, open the seeded SAMPLE or destination-1 trip, start generation and wait for completed.
-4. Check the ai_generations row: provider GEMINI, model_id as configured, prompt_template_id/prompt_version set, outcome model or model_repaired; check that API-33 totals equal the engine output (not model values).
+4. Check the generation record through API-23: provider GEMINI, model_id as configured, prompt_version set, outcome model or model_repaired, retrieval_mode, embedding_model_id and retrieval_ms. Check that API-33 totals equal the engine output, not model values.
 5. If Gemini does not produce a plan: record the cause (quota, structured output, prompt) in gates.md, keep any demo on MOCK with the demo-data banner and never present it as a Gemini result; Nidhi and Manya continue on it while Sprint 4 proceeds on MOCK.
-6. Record pass or not passed with reasons, owners and dates in docs/progress/gates.md.
+6. RAG check on AWS staging (Amendment A1 §10.4):
+   - the release task log shows the destination-1 guide and place chunks embedded with GEMINI_EMBEDDING_MODEL_ID;
+   - the API-23 response of the Gemini run has retrieval_mode = vector and the embedding model;
+   - the itinerary page shows at least one note with sources (ACC-19);
+   - record retrieval_ms from API-23 for at least 10 staging generations and their p95 (NFR-050, TC-459).
+
+   If embeddings are unavailable, record lexical_fallback, the cause and the owners, and make no RAG claim.
+7. Record pass or not passed with reasons, owners and dates in docs/progress/gates.md.
 
 **Interfaces**
 
@@ -2067,6 +2931,7 @@ Canonical ordered task list generated from the implementation specification (§1
 - A Gemini-generated plan is visible on staging and its generation record names provider, model id and prompt version (TC-370, manual).
 - make check is green on main at the gate commit.
 - make smoke passes against staging.
+- The Gemini plan on AWS staging has retrieval_mode = vector and cites at least one passage shown on the itinerary page, and the retrieval time p95 is recorded (ACC-19, NFR-050, TC-459); otherwise lexical_fallback is recorded with its cause.
 - The gate decision is recorded; warnings may remain and no quality claim is made.
 
 **Tests**
@@ -2095,8 +2960,9 @@ Canonical ordered task list generated from the implementation specification (§1
 | IMP-411 | Transport allowance, stay budget and price source labels | CODE | Manal | Manal 2, Krrish 2 | IMP-308 | 4 |
 | IMP-412 | Loading, empty and error states on every MVP screen | CODE | Manasvi | Manasvi 3 | IMP-104 | 3 |
 | IMP-413 | Evaluation harness (command line) | CODE | Manya | Manya 3 | IMP-310, IMP-207 | 3 |
+| IMP-318 | Retrieval evaluation: recall, hit rate, citation validity and grounding rate | CODE | Junaid | Junaid 2 | IMP-413, IMP-316, IMP-314 | 2 |
 | IMP-414 | End-to-end journey test on staging | VERIFY | Krrish | Krrish 3, Junaid 2 | IMP-403, IMP-408, IMP-409 | 5 |
-| IMP-499 | Sprint 4 gate SG-4 (blueprint Gate 3) and cut-list checkpoint | VERIFY | Kirtan | Kirtan 2 | IMP-401, IMP-402, IMP-403, IMP-404, IMP-405, IMP-406, IMP-407, IMP-408, IMP-409, IMP-410, IMP-411, IMP-412, IMP-413, IMP-414 | 2 |
+| IMP-499 | Sprint 4 gate SG-4 (blueprint Gate 3) and cut-list checkpoint | VERIFY | Kirtan | Kirtan 2 | IMP-401, IMP-402, IMP-403, IMP-404, IMP-405, IMP-406, IMP-407, IMP-408, IMP-409, IMP-410, IMP-411, IMP-412, IMP-413, IMP-414, IMP-318 | 2 |
 
 
 ### IMP-401 Retries with backoff and circuit breaker in the Gemini adapter
@@ -2104,6 +2970,8 @@ Canonical ordered task list generated from the implementation specification (§1
 **Task:** Sprint 4 (week 4) · CODE · 3 points · lead Nidhi · release MVP
 
 **Objective:** The Gemini adapter retries only ProviderTimeout, ProviderRateLimited and ProviderUnavailable with bounded backoff inside the 70 s step-7 allowance, and an in-memory circuit breaker skips the provider while open: after transient errors the fallback runs immediately, after a quota or auth error the generation ends failed with the original cause (IMD-44).
+
+**Amended by A1 (2 November 2026):** embedding calls (`embed_texts`, IMD-112) are neither counted by nor blocked by the circuit breaker; the breaker covers generation calls only.
 
 **Owners and parts:** Nidhi — whole task (3 points); branch `feat/IMP-401-<short>`
 
@@ -2390,6 +3258,8 @@ Canonical ordered task list generated from the implementation specification (§1
 **Task:** Sprint 4 (week 4) · CODE · 5 points · lead Het · release MVP
 
 **Objective:** Every itinerary edit runs through one edit pipeline that, in a single transaction, checks plan_revision, applies the operation, recalculates times and costs, revalidates, saves warnings, increments plan_revision and returns the recalculated day, totals and findings.
+
+**Amended by A1 (2 November 2026):** edits keep the `source_chunk_ids` of every item they keep (Amendment A1 §6.10, IMD-110).
 
 **Owners and parts:** Het — whole task (5 points); branch `feat/IMP-407-<short>`
 
@@ -2699,6 +3569,66 @@ Canonical ordered task list generated from the implementation specification (§1
 
 - PR with make check green.; eval/results/<run_id>/run.json from a MOCK run committed or attached.
 
+### IMP-318 Retrieval evaluation: recall, hit rate, citation validity and grounding rate
+
+**Task:** Sprint 4 (week 4) · CODE · 2 points · lead Junaid · release MVP (Amendment A1)
+
+**Objective:** The evaluation harness has a retrieval suite. It measures, on a team-labelled query set:
+
+- `recall@6` of relevant guide documents;
+- the hit rate of relevant places in the top 12, in vector and lexical mode;
+- citation validity and grounding rate of generated plans.
+
+Every number carries its run metadata.
+
+**Owners and parts:** Junaid — whole task (2 points); branch `feat/IMP-318-whole-task`
+
+**Traces to:** Stories US-167; FR-140; NFR-041, NFR-046
+
+**Dependencies:** Prerequisites: IMP-413, IMP-316, IMP-314 (labels for destination 1), Amendment A1 §6.14 · Downstream: IMP-514, IMP-705
+
+**Files**
+
+- eval/datasets/retrieval/v1/queries.jsonl (create)
+- eval/datasets/retrieval/v1/manifest.json (create)
+- apps/api/app/evaluation/retrieval_metrics.py (create; pure)
+- apps/api/app/evaluation/run.py (modify: `--suite retrieval`)
+- apps/api/tests/unit/evaluation/test_retrieval_metrics.py (create)
+
+**Implementation**
+
+1. **Labelled queries.** Write `queries.jsonl` with 10 to 20 lines for the SAMPLE fixture and destination 1. Each line holds a destination slug, preference fields and notes, `relevant_guide_doc_keys` and `relevant_place_refs`. Place references are stable `{source_name, external_ref}` pairs, never database UUIDs, which change on every reseed; the harness resolves them to IDs.
+   - Junaid writes the labels and Malhar and Krrish review them; record the reviewers in `manifest.json`.
+   - The labels are member input under the DATA rule: Claude Code never invents labels and may only build the file layout and validate it. The planner asks the operator for the labelled file before the run.
+2. **Metrics.** `retrieval_metrics.py` (pure):
+   - `recall_at_k(selected_doc_keys, relevant, k=6)`;
+   - `place_hit_rate(ranked_place_ids, relevant, top=12)`;
+   - `citation_validity(saved_ids, supplied_ids)` (must be 1.0);
+   - `grounding_rate(items)`, the share of AI-written notes with at least one citation.
+3. **Harness.** `make eval` passes `$(ARGS)` to the harness; add the pass-through if the Makefile lacks it. `run.py --suite retrieval` runs `rag.service.retrieve` and the ranking for every query, in vector mode and with embeddings forced off (lexical). For the generation metrics it runs the MOCK pipeline. It writes `eval/results/<run_id>/run.json` with dataset version, provider, embedding model and commit SHA (NFR-041), and a short report in `eval/reports/`.
+4. **Tests.** Unit tests for every metric (edge cases: empty relevant set, k larger than the list) and one harness run on the SAMPLE queries with MOCK, which must be identical on a second run.
+
+**Interfaces**
+
+- Modules: MOD-B15, MOD-B18
+- Env: AI_PROVIDER, GEMINI_EMBEDDING_MODEL_ID
+- Other: eval/datasets/retrieval/v1/, Amendment A1 §6.14
+
+**Acceptance criteria**
+
+- The harness reports `recall@6` and the place hit rate in vector and lexical mode (FR-140 AC1, TC-458).
+- It reports citation validity (1.0) and grounding rate for MOCK generations (FR-140 AC2, TC-458).
+- Each run record names the dataset version, provider, embedding model and commit; two MOCK runs give identical numbers (FR-140 AC3, NFR-041).
+
+**Tests**
+
+- apps/api/tests/unit/evaluation/test_retrieval_metrics.py — TC-458 — `make test-unit ARGS='-k retrieval_metrics'`
+- eval/ (harness run) — TC-458 — `make eval DATASET=retrieval/v1 ARGS='--suite retrieval'`
+
+**Completion evidence**
+
+- Two identical MOCK run records under eval/results/; the report in eval/reports/; label review recorded in the manifest
+
 ### IMP-414 End-to-end journey test on staging
 
 **Task:** Sprint 4 (week 4) · VERIFY · 5 points · lead Krrish with Junaid · release MVP
@@ -2751,11 +3681,13 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** Sprint gate SG-4 (blueprint Gate 3) and the cut-list checkpoint are decided and recorded: the whole journey works on staging, a provider failure yields a labelled fallback plan, edits recalculate atomically, and any required cuts are applied by flag.
 
+**Amended by A1 (2 November 2026):** also waits for IMP-318 (Amendment A1 §10.3).
+
 **Owners and parts:** Kirtan — whole task (2 points); branch `feat/IMP-499-<short>`
 
 **Traces to:** enabling work (no requirement)
 
-**Dependencies:** Prerequisites: IMP-401, IMP-402, IMP-403, IMP-404, IMP-405, IMP-406, IMP-407, IMP-408, IMP-409, IMP-410, IMP-411, IMP-412, IMP-413, IMP-414 · Downstream: none
+**Dependencies:** Prerequisites: IMP-401, IMP-402, IMP-403, IMP-404, IMP-405, IMP-406, IMP-407, IMP-408, IMP-409, IMP-410, IMP-411, IMP-412, IMP-413, IMP-414, IMP-318 · Downstream: none
 
 **Files**
 
@@ -3014,6 +3946,8 @@ Canonical ordered task list generated from the implementation specification (§1
 **Task:** Sprint 5 (week 5) · CODE · 5 points · lead Het with Krrish · release MVP-S · Cut-list item 6 (flag alternatives): when disabled the traveller still removes an activity (API-27) and adds another place (API-25).
 
 **Objective:** For any unlocked item the traveller sees up to three ranked alternatives with time and cost differences and can apply one, after which the day is recalculated and revalidated.
+
+**Amended by A1 (2 November 2026):** replacing an item's place clears its `source_chunk_ids` (Amendment A1 §6.10).
 
 **Owners and parts**
 
@@ -3635,6 +4569,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** The dashboard lists the traveller's trips with title, destination, dates and status (archived behind a filter) and offers rename, duplicate, archive/restore and soft delete with confirmation.
 
+**Amended by A1 (2 November 2026):** duplicating a trip copies each item's `source_chunk_ids` (Amendment A1 §6.10).
+
 **Owners and parts**
 
 - Manal (lead) — Rename, duplicate, archive, delete trip API; TripActionsMenu wired to the new endpoints (6 points)
@@ -3688,6 +4624,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** Demo destination 2 is curated from public sources, imported through the quality gate, and its report states the usable count against the minimum.
 
+**Amended by A1 (2 November 2026):** step 6 adds the optional destination-2 guides (Amendment A1 §6.3, IMD-111).
+
 **Owners and parts**
 
 - Junaid (lead) — Opening hours and prices for destination 2, with sources (2 points)
@@ -3710,6 +4648,7 @@ Canonical ordered task list generated from the implementation specification (§1
 3. Fix or remove rejected rows; commit quality_report.md with usable count, minimum (Proposed 40 usable places), rejected rows with reasons.
 4. If the count is below the minimum, record the team decision to demo one destination in docs/decisions/ (FR-less story US-027 AC2).
 5. Load into staging with the same seed command.
+6. Optional (Amendment A1 §6.3, IMD-111): add guide documents for destination 2 in data/guides/<slug-2>/, written and reviewed by the same rules as IMP-314, and pass the strict gate. Without them, destination 2 uses place documents only.
 
 **Interfaces**
 
@@ -3875,6 +4814,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** A traveller can regenerate one day around locked items or the whole itinerary as a new version through the generation job protocol; other days stay byte-identical and a failure leaves the plan unchanged.
 
+**Amended by A1 (2 November 2026):** regenerated items take the citations of the new generation and kept locked items keep theirs; the request is gr-2 with passages when template v2 is active (Amendment A1 §6.8, §6.10).
+
 **Owners and parts**
 
 - Het (lead) — Merge regenerated day and whole-itinerary regeneration API (4 points)
@@ -4018,6 +4959,8 @@ Canonical ordered task list generated from the implementation specification (§1
 **Task:** Sprint 6 (week 6) · CODE · 8 points · lead Jeel with Malhar · release MVP-S · Cut-list item 1 (flag versions): when disabled there is no history or restore; one backup copy of the previous itinerary is kept for regeneration.
 
 **Objective:** Each trip keeps up to 20 itinerary versions written automatically on generation, regeneration and restore and on Save version, and any version can be restored as the new current plan.
+
+**Amended by A1 (2 November 2026):** `snap-1` snapshots store each item's `source_chunk_ids`, and a restore brings them back; a snapshot without them reads as empty (Amendment A1 §5.5).
 
 **Owners and parts**
 
@@ -4342,6 +5285,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** Every protected MVP route is proven owner-only by a second user, injection, secret, bundle, CORS, header and dependency checks pass on the release-candidate commit, and the results are recorded.
 
+**Amended by A1 (2 November 2026):** step 8 adds the AWS checks. The extension routes of step 7 are cut (IMD-65), so their cases skip with that reason.
+
 **Owners and parts**
 
 - Junaid (lead) — Authorization suite re-run and injection corpus (2 points)
@@ -4366,6 +5311,13 @@ Canonical ordered task list generated from the implementation specification (§1
 5. Run the CI guard jobs on the candidate commit: secret scan over the full history (TC-354), bundle inspection that only NEXT_PUBLIC_* values are present (TC-355), pip-audit and npm audit with no critical findings (TC-356); assert log lines contain no e-mail, notes text or prompt body (TC-358, TC-025).
 6. Record each check with commit SHA, date, command and result in docs/test-reports/security-sprint7.md; open a severity-1 defect for any failure (a failed security item blocks SG-7).
 7. Extend the ownership and route-inventory suites to the extension routes API-43 and API-63 to API-75 (owned trips and items return 404 to another user; reference-data context routes require a token), and check that disabled extension switches return 404 (TC-431, TC-432); the route inventory picks up each extension route when its card merges, so the extension cards are not prerequisites of this card (§11.2).
+8. AWS checks (Amendment A1 §11):
+   - RDS is not reachable from outside the VPC and requires TLS (TC-433);
+   - task definitions hold secrets only as SSM references and the images contain no secret (TC-434);
+   - the OIDC deploy role trusts only main and v* tags (TC-436);
+   - the ECR scan has no critical finding.
+
+   Record each in docs/test-reports/security-sprint7.md.
 
 **Interfaces**
 
@@ -4378,6 +5330,7 @@ Canonical ordered task list generated from the implementation specification (§1
 - No secret in repository history, logs or bundle (CHK-03); CORS and headers verified (CHK-05)
 - docs/test-reports/security-sprint7.md lists every check with commit, date and result; nothing is marked passed that was not run
 - TC-431 passes: every extension route is in the route inventory and refuses another user's resources with 404.
+- TC-433, TC-434 and TC-436 are recorded as passed on AWS staging, or as failed with a severity-1 defect.
 
 **Tests**
 
@@ -4487,6 +5440,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** The evaluation harness has been re-run on the release-candidate commit with MOCK, the rule-based planner and GEMINI, the results are compared with the first baseline, and a cost and latency report cites only recorded runs.
 
+**Amended by A1 (2 November 2026):** step 7 adds the retrieval suite of IMP-318 (FR-140).
+
 **Owners and parts:** Nidhi — whole task (1 points); branch `feat/IMP-705-<short>`
 
 **Traces to:** Stories US-131; FR-120; NFR-004, NFR-039, NFR-041
@@ -4505,6 +5460,11 @@ Canonical ordered task list generated from the implementation specification (§1
 4. Nidhi runs make eval PROVIDER=GEMINI DATASET=trips/v1 with the protected staging key within the daily cap (TC-392); never in PR CI.
 5. Write eval/reports/final-baseline.md comparing with the first baseline (IMP-514): every number links to a run record under eval/results/ (TC-390, TC-397).
 6. Write docs/test-reports/cost-latency-report.md: latency, token use and fallback rate taken from run records and ai_generations rows only (TC-396, NFR-041); mark anything unmeasured as "not measured".
+7. Run the retrieval suite of IMP-318 on the same commit:
+   - make eval DATASET=retrieval/v1 ARGS='--suite retrieval' with MOCK;
+   - with GEMINI (staging key, within the cap), run by Nidhi.
+
+   Add recall@6, place hit rate, citation validity and grounding rate to final-baseline.md, each citing its run record (FR-140).
 
 **Interfaces**
 
@@ -4516,6 +5476,7 @@ Canonical ordered task list generated from the implementation specification (§1
 - final-baseline.md compares with the first baseline and every figure cites a run record (US-131 AC1, TC-397)
 - The cost and latency report contains no number without a run record (US-131 AC2, NFR-041)
 - If the Gemini run could not be made (key, quota), the report says so and no Gemini figure is claimed
+- The retrieval metrics of FR-140 are reported for MOCK and, if possible, GEMINI, each with a run record (TC-458)
 
 **Tests**
 
@@ -4575,6 +5536,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** The course document set (SRS, architecture, API specification, test plan) and the user and deployment guides exist in docs/, match the deployed system, and both guides have been followed successfully by a member outside the platform squad.
 
+**Amended by A1 (2 November 2026):** steps 2 and 4 cover the AWS deployment and the RAG pipeline.
+
 **Owners and parts**
 
 - Malhar (lead) — SRS and data model section (2 points)
@@ -4595,9 +5558,15 @@ Canonical ordered task list generated from the implementation specification (§1
 **Implementation**
 
 1. Assemble docs/srs.md from this specification §2 and the blueprint; list every difference between documented and built behaviour (US-145 AC2).
-2. Export architecture and ER diagrams into docs/architecture.md; docs/api.md links contracts/openapi.v1.json and the published OpenAPI page (NFR-033); docs/test-plan.md summarises §13 with links to test reports.
+2. Export architecture and ER diagrams into docs/architecture.md, including the AWS deployment view and the RAG pipeline (corpus, chunking, embeddings, retrieval, grounding, citations; Amendment A1 §3 and §6); docs/api.md links contracts/openapi.v1.json and the published OpenAPI page (NFR-033); docs/test-plan.md summarises §13 with links to test reports.
 3. Write docs/guides/user-guide.md (create trip, generate, edit, costs, labels Estimate/Curated/Unavailable, known limits) with screenshots taken by the team.
-4. Write docs/guides/deployment-guide.md (Vercel, Render, Supabase, environment values per §4, migrations, smoke tests, rollback, operator account-deletion procedure for NFR-022).
+4. Write docs/guides/deployment-guide.md, building on docs/guides/aws-setup.md and docs/guides/deployment.md:
+   - AWS ECS Express Mode, RDS and SSM, and the auth-only Supabase project (Amendment A1 §4);
+   - environment values per Amendment A1 §4.2 and §7.2;
+   - the release task (migrations, seed, RAG index);
+   - smoke tests and rollback;
+   - cost guardrails;
+   - the operator account-deletion procedure for NFR-022 (Supabase Auth user plus auth.users row on RDS).
 5. Claude Code may draft from the repository and this specification, and must run every command it documents locally before writing it; commands it could not run are marked "not verified".
 6. A member outside the platform squad follows README setup (time recorded, NFR-032, TC-335) and the deployment guide on a clean account; record the outcome in docs/progress/sprint-7.md.
 
@@ -5004,6 +5973,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** Production runs the tagged release, production smoke tests pass, and a rehearsed six-minute demo script, a rehearsal log and a backup video exist.
 
+**Amended by A1 (2 November 2026):** production runs on AWS (IMD-99 to IMD-104). Vercel, Render and a hosted Supabase database are not used.
+
 **Owners and parts**
 
 - Kirtan (lead) — Production deployment, smoke tests, RC tag (4 points)
@@ -5021,8 +5992,15 @@ Canonical ordered task list generated from the implementation specification (§1
 **Implementation**
 
 1. Follow the release routine: check GEMINI_MODEL_ID against the provider model and deprecation pages and record the date (CHK-06); confirm the spending control and daily caps (CHK-07, NFR-037) and the privacy notice (CHK-08).
-2. Take a database export of production before migrating and record where it is stored (NFR-009, CHK-12).
-3. Kirtan deploys production from tag v1.0-rc1 with deploy-production.yml (manual approval); migrations run before the new API version starts.
+2. Kirtan takes an RDS manual snapshot of production before migrating and records its name and time (NFR-009, CHK-12; Amendment A1 §5.1).
+3. Kirtan creates the production resources on AWS (Amendment A1 §4.1):
+   - database travel_production on the RDS instance;
+   - SSM parameters under /group12/production/;
+   - Express services group12-api-production and group12-web-production;
+   - the PRODUCTION_* repository variables;
+   - the production web URL in the Supabase Auth redirect list.
+
+   He then deploys from tag v1.0-rc1 with deploy-production.yml (manual approval). The release task runs the auth stub, the migrations, the seed of SEED_DIRS and the RAG index before the services are updated (IMD-103).
 4. Run make smoke URL=<production API URL> and make e2e ARGS='--grep @smoke' with BASE_URL=<production web URL>; on failure roll back to the previous release per the deployment guide.
 5. Write docs/demo/demo-script.md with the 12 steps of blueprint §31.7 adapted to the features actually shipped (cut-list decisions applied) and the demo accounts and data.
 6. Rehearse twice on production after warm-up (TC-377), including the provider-failure path on staging (AI_PROVIDER=MOCK, MOCK_PROVIDER_SCENARIO=timeout, IMD-33) and the rule-based mode on production; log issues with severity in rehearsal-log.md.
@@ -5031,7 +6009,7 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Interfaces**
 
-- API: API-01, API-02, API-22, API-23 · Modules: MOD-P01, MOD-D01 · Components: FallbackNotice · Env: GEMINI_MODEL_ID, AI_DAILY_GENERATIONS_PER_USER, AI_DAILY_GENERATIONS_GLOBAL, ALLOWED_ORIGINS · Other: Vercel, Render, Supabase production project
+- API: API-01, API-02, API-22, API-23 · Modules: MOD-P01, MOD-D01 · Components: FallbackNotice · Env: GEMINI_MODEL_ID, AI_DAILY_GENERATIONS_PER_USER, AI_DAILY_GENERATIONS_GLOBAL, ALLOWED_ORIGINS · Other: AWS ECS Express Mode, RDS travel_production, SSM /group12/production/, auth-only Supabase project (Amendment A1 §4)
 
 **Acceptance criteria**
 
@@ -5039,7 +6017,8 @@ Canonical ordered task list generated from the implementation specification (§1
 - Production smoke (E2E-09) passes and its output is stored
 - The demo runs in about six minutes on the deployed site in rehearsal, with the time measured (US-147 AC1)
 - In rehearsal a Gemini failure produces the saved or rule-based plan, and the backup video exists (US-147 AC2, CHK-17)
-- A production database export exists from before the deployment (CHK-12)
+- A production database export (an RDS manual snapshot) exists from before the deployment (CHK-12)
+- Production runs on AWS from the tagged images, budget alerts are active and the task definitions hold no secret values (CHK-24, NFR-049)
 
 **Tests**
 
@@ -5106,6 +6085,8 @@ Canonical ordered task list generated from the implementation specification (§1
 
 **Objective:** On demo day the pre-demo checklist is completed and recorded with a name and time per step: backend awake, database unpaused, export stored, keys and quotas checked, demo path smoke-tested, local MOCK fallback ready.
 
+**Amended by A1 (2 November 2026):** the RDS instance must be available, an RDS manual snapshot is the export, and CHK-24 and CHK-25 are checked.
+
 **Owners and parts**
 
 - Malhar (lead) — Pre-demo checklist: database reset and fallback drill (1 points)
@@ -5123,7 +6104,7 @@ Canonical ordered task list generated from the implementation specification (§1
 **Implementation**
 
 1. Before demo day, Claude Code may create docs/demo/pre-demo-checklist.md as a template with one row per step and empty "done by / time" columns.
-2. On demo day the team: wakes the backend at least 10 minutes before (NFR-005), unpauses the database, exports the database and records the location (NFR-009), checks the Gemini key, model id and remaining quota, and checks the network.
+2. On demo day the team: wakes the backend at least 10 minutes before (NFR-005), confirms the RDS instance is available (not stopped), takes an RDS manual snapshot and records its name (NFR-009), checks the Gemini key, model id and remaining quota, and checks the network.
 3. Run make smoke URL=<production API URL> and the demo path once; start the local stack with AI_PROVIDER=MOCK on the presenter machine as fallback.
 4. Each step is ticked only by the person who did it, with the time; Claude Code must not tick steps or fill times.
 
@@ -5136,6 +6117,7 @@ Canonical ordered task list generated from the implementation specification (§1
 - The checklist file shows every step with a name and time (US-149 AC2)
 - Backend awake, database unpaused and an export stored before the demo (US-149 AC1, CHK-16)
 - Production smoke passed on demo day
+- CHK-24 and CHK-25 checked: AWS production from the tagged images with budget alerts, and the RAG index built with the retrieval report committed
 
 **Tests**
 

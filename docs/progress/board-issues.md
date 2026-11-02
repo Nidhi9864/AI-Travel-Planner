@@ -209,3 +209,17 @@ Imported in IMP-102 (RUN-003b) into the board https://github.com/users/het-lathi
 | 181 | IMP-804 · Presentation slides | jeelfefar2141 | Jeel | sprint-8, points-1 | open | #187 |
 | 182 | IMP-804 · Final report: AI chapter | manyarana | Manya | sprint-8, points-1 | open | #188 |
 | 183 | IMP-899 · whole task | kirtan-S111 | Kirtan | sprint-8, points-1 | open | #189 |
+| 184 | IMP-217 · whole task | kirtan-S111 | Kirtan | sprint-2, points-4 | open | #212 |
+| 185 | IMP-218 · AWS deploy workflows and release task | Junaid-Kureshi | Junaid | sprint-2, points-2 | open | #213 |
+| 186 | IMP-218 · Web production image | Manasvi1704 | Manasvi | sprint-2, points-2 | open | #214 |
+| 187 | IMP-219 · whole task | het-lathiya | Het | sprint-2, points-2 | open | #215 |
+| 188 | IMP-311 · whole task | Malhar1112-v | Malhar | sprint-2, points-3 | open | #216 |
+| 189 | IMP-312 · whole task | Nidhi9864 | Nidhi | sprint-3, points-3 | open | #217 |
+| 190 | IMP-313 · whole task | manalPatel2557 | Manal | sprint-3, points-3 | open | #218 |
+| 191 | IMP-314 · Destination 1 guide documents | Assassin-byte | Krrish | sprint-3, points-2 | open | #219 |
+| 192 | IMP-314 · Guide source review and quality report | Malhar1112-v | Malhar | sprint-3, points-1 | open | #220 |
+| 193 | IMP-315 · whole task | jeelfefar2141 | Jeel | sprint-3, points-3 | open | #221 |
+| 194 | IMP-316 · Grounded generation | manyarana | Manya | sprint-3, points-3 | open | #222 |
+| 195 | IMP-316 · Saved sources in API-24 | het-lathiya | Het | sprint-3, points-1 | open | #223 |
+| 196 | IMP-317 · whole task | Manasvi1704 | Manasvi | sprint-3, points-2 | open | #224 |
+| 197 | IMP-318 · whole task | Junaid-Kureshi | Junaid | sprint-4, points-2 | open | #225 |

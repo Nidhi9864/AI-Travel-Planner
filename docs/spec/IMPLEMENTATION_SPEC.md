@@ -1,5 +1,7 @@
 # AI Travel Planner — Claude Code Implementation Specification
 
+> **Specification v1.4 = this document (v1.3) + `docs/spec/AMENDMENT_A1_AWS_RAG.md` (2 November 2026; IMD-99 to IMD-116).** Read the amendment together with this file. Where they differ, the amendment wins. It moves hosting to AWS (Amazon ECS Express Mode, Amazon RDS PostgreSQL 16 with pgvector, Supabase for sign-in only) and adds the RAG pipeline (Gemini embeddings, pgvector retrieval, cited sources on itinerary items).
+
 Version 1.3 (extensions, team plan v2 and execution protocol), 27 October 2026. Markdown edition of the specification PDF, for Claude Code and the planner; the content is the same, and diagrams are in the PDF. Sections are cited as §N; Appendix A holds the reference SQL (also in `docs/spec/sql/`).
 
 # 1. Project execution overview

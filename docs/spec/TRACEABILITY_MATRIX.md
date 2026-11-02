@@ -1,6 +1,6 @@
 # TRACEABILITY_MATRIX — AI Travel Planner
 
-Feature → Requirement → User story → Task → Module and file → API and database → Test → Sprint, for the 88 MVP and MVP-S functional requirements and the 10 extension (EXT) requirements. Generated from the implementation specification (§2, §10, §15); regenerate it instead of editing it by hand. Test IDs are the blueprint catalogue (TC-nnn) and the extension cases TC-399 to TC-432.
+Feature → Requirement → User story → Task → Module and file → API and database → Test → Sprint, for the 88 MVP and MVP-S functional requirements and the 10 extension (EXT) requirements. Generated from the implementation specification (§2, §10, §15); regenerate it instead of editing it by hand. Test IDs are the blueprint catalogue (TC-nnn) and the extension cases TC-399 to TC-432. Amendment A1 (2 November 2026) adds catalogue item C-13 with FR-136 to FR-140 (rows at the end; test cases TC-433 to TC-459). The extension rows (FR-088, FR-127 to FR-135) belong to cards cut by IMD-65.
 | Feature | Requirement | Stories | Tasks | Modules | Main files | API · tables | Tests | Sprint |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | F-01 | FR-001 | US-010 | IMP-109 | MOD-F01 | apps/web/lib/auth/supabase.ts<br>apps/web/lib/auth/useSession.ts | — | TC-051, TC-052, TC-053 (+2) | 1 |
@@ -87,7 +87,7 @@ Feature → Requirement → User story → Task → Module and file → API and 
 | F-09, C-07 | FR-118 | US-127 | IMP-310 | MOD-B15 | eval/datasets/trips/v1/cases.jsonl<br>eval/datasets/trips/v1/manifest.json | — | TC-283, TC-284, TC-386 (+1) | 3 |
 | F-09, C-07 | FR-119 | US-128 | IMP-413 | MOD-B06, MOD-B07 (+2) | apps/api/app/evaluation/run.py<br>apps/api/app/evaluation/metrics.py | — | TC-041, TC-285, TC-286 (+5) | 4 |
 | F-09 | FR-120 | US-129, US-131 | IMP-514, IMP-705 | MOD-B05, MOD-B15 | apps/api/app/evaluation/manifest.py<br>apps/api/app/evaluation/run.py |  · ai_generations | TC-287, TC-390, TC-391 (+1) | 5 |
-| F-09 | FR-123 | US-005 | IMP-103, IMP-112, IMP-201 | MOD-B01, MOD-P01 | apps/api/app/main.py<br>apps/api/app/core/config.py | API-01, API-02 · alembic_version | TC-288, TC-289, TC-342 | 1 |
+| F-09 | FR-123 | US-005 | IMP-103, IMP-112, IMP-201, IMP-217, IMP-218 | MOD-B01, MOD-P01 | apps/api/app/main.py<br>apps/api/app/core/config.py | API-01, API-02 · alembic_version | TC-288, TC-289, TC-342 | 1 |
 | — | FR-124 | US-003 | IMP-103, IMP-105 | MOD-B01, MOD-P01 | apps/api/app/main.py<br>apps/api/app/core/config.py | API-01 | TC-042, TC-043, TC-290 (+7) | 1 |
 | — | FR-125 | US-006 | IMP-201 | MOD-B01 | apps/api/app/core/health.py<br>apps/api/app/core/logging.py | API-01, API-02 · alembic_version | TC-292, TC-293, TC-342 (+2) | 2 |
 | — | FR-126 | US-009 | IMP-511 | MOD-B01, MOD-B05 (+1) | apps/api/app/core/rate_limit.py<br>apps/api/app/generation/service.py | API-16, API-22, API-25 (+6) · ai_generations | TC-294, TC-353 | 5 |
@@ -101,4 +101,8 @@ Feature → Requirement → User story → Task → Module and file → API and 
 | AX-24 | FR-133 | US-160 | IMP-712 | MOD-B06, MOD-B08 (+2) | apps/api/app/budget/fit.py<br>apps/api/app/budget/router.py | API-27, API-29, API-33 (+1) · budget_settings, itinerary_items, places (+2) | TC-419, TC-420, TC-421 | 7 |
 | AX-41 | FR-134 | US-161 | IMP-713 | MOD-B04, MOD-B17 (+1) | apps/api/migrations/sql/0010_context_cards.sql<br>apps/api/migrations/sql/down/0010_context_cards.down.sql | API-72, API-73 · context_cards, destinations, places | TC-422, TC-423, TC-424 | 7 |
 | AX-12 | FR-135 | US-162 | IMP-613 | MOD-B05, MOD-B12 (+2) | apps/api/migrations/sql/0007_packing_and_assist.sql<br>apps/api/migrations/sql/down/0007_packing_and_assist.down.sql | API-43, API-74, API-75 · ai_assist_calls, checklist_items, itinerary_items (+2) | TC-427, TC-428, TC-429 (+1) | 6 |
-
+| C-13 | FR-136 | US-166 | IMP-313, IMP-314 | MOD-B18, MOD-B04 (+1) | apps/api/app/rag/service.py<br>apps/api/app/rag/chunker.py | — · rag_documents, rag_chunks, data_sources (+1) | TC-447, TC-448, TC-449 (+1) | 3 |
+| C-13 | FR-137 | US-164 | IMP-315 | MOD-B18, MOD-B06 (+1) | apps/api/app/rag/service.py<br>apps/api/app/generation/ranking.py | API-22 · rag_chunks, rag_documents, places (+1) | TC-451, TC-452, TC-453 (+1) | 3 |
+| C-13 | FR-138 | US-164 | IMP-316 | MOD-B05, MOD-B06 (+2) | apps/api/app/generation/request_builder.py<br>apps/api/app/validation/output_check.py | API-22, API-23 · ai_generations, itinerary_items | TC-454, TC-455, TC-456 | 3 |
+| C-13 | FR-139 | US-165 | IMP-316, IMP-317 | MOD-B08, MOD-F04 (+1) | apps/api/app/itinerary/schemas.py<br>apps/web/components/itinerary/ItemSources.tsx | API-24 · itinerary_items, rag_chunks, rag_documents (+1) | TC-456, TC-457 | 3 |
+| C-13 | FR-140 | US-167 | IMP-318 | MOD-B15, MOD-B18 | apps/api/app/evaluation/retrieval_metrics.py<br>eval/datasets/retrieval/v1/queries.jsonl | — | TC-458 | 4 |
