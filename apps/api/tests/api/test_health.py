@@ -81,7 +81,7 @@ def test_health_unknown_route_returns_not_found_envelope(client: TestClient) -> 
 
 def test_health_unknown_api_v1_route_returns_not_found_envelope(client: TestClient) -> None:
     request_id = str(uuid.uuid4())
-    response = client.get("/api/v1/trips", headers={"X-Request-ID": request_id})
+    response = client.get("/api/v1/no-such-route", headers={"X-Request-ID": request_id})
     assert response.status_code == 404
     assert response.json()["error"]["request_id"] == request_id
 
