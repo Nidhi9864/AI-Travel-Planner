@@ -23,7 +23,7 @@ API_PENDING := not yet implemented (IMP-101 api-pyproject-guard part)
 # pytest exits 5 when it collects no tests; an empty suite counts as success.
 PYTEST_EXIT := rc=$$?; if [ $$rc -eq 5 ]; then echo "pytest: no tests collected (exit 5 treated as success)"; exit 0; fi; exit $$rc
 
-.PHONY: help setup stack-up stack-down db-up db-down db-migrate db-reset seed api web \
+.PHONY: help setup stack-up stack-down db-up db-down db-migrate db-bootstrap db-reset seed api web \
 	lint typecheck imports test-unit test-contract test-api test-authz test-web test e2e \
 	openapi openapi-check eval check smoke live-smoke
 
@@ -33,6 +33,7 @@ help:
 	@echo "  stack-up | stack-down         Supabase CLI local stack"
 	@echo "  db-up | db-down               docker compose test Postgres"
 	@echo "  db-migrate | db-reset | seed  migrations, local/test reset, seed data (SEED_DIRS=...)"
+	@echo "  db-bootstrap                  auth stub when schema auth is missing, then migrations (A1)"
 	@echo "  api | web                     run the API (port 8000) or the web app (port 3000)"
 	@echo "  lint | typecheck | imports    quality checks"
 	@echo "  test-unit | test-contract | test-api | test-authz | test-web | test"
@@ -77,6 +78,11 @@ db-down:
 # apps/api/migrations/sql/test_auth_stub.sql first; the Supabase stack already has the auth schema.
 db-migrate:
 	cd $(API_DIR) && .venv/bin/alembic upgrade head
+
+# A1 §7.3 (IMP-219): a database without schema auth (compose db, AWS RDS) gets the A.1 auth stub
+# first; on Supabase the stub step changes nothing. Then the migrations run as in db-migrate.
+db-bootstrap:
+	cd $(API_DIR) && .venv/bin/python -m app.db.auth_stub --if-missing && .venv/bin/alembic upgrade head
 
 # §4.7, §5.7: local and test databases only (APP_ENV local or test, DATABASE_URL host localhost or
 # 127.0.0.1). Drops and recreates schema public (applying the auth stub on plain PostgreSQL), then

@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     supabase_url: str = "http://127.0.0.1:54321"
     supabase_jwks_url: str = ""
     supabase_jwt_secret: SecretStr = SecretStr("")
+    # A1 §5.1: true when the database holds the A.1 auth stub (compose db, test, RDS); the first
+    # call of a user then mirrors its auth.users row (id only) before the profile (IMP-219).
+    db_auth_stub: bool = False
 
     # routing
     ors_api_key: SecretStr = SecretStr("")

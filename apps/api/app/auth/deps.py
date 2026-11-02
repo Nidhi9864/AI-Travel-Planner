@@ -46,10 +46,13 @@ DbSession = Annotated[AsyncSession, Depends(db_session)]
 
 
 async def current_user(
-    claims: Annotated[TokenClaims, Depends(verified_claims)], session: DbSession
+    claims: Annotated[TokenClaims, Depends(verified_claims)], session: DbSession, request: Request
 ) -> TokenClaims:
     # verified_claims is resolved first (parameter order), so db_session opens only for a valid token.
-    await service.get_or_create_profile(session, claims.user_id)
+    settings: Settings = request.app.state.settings
+    await service.get_or_create_profile(
+        session, claims.user_id, mirror_auth_user=settings.db_auth_stub
+    )
     return claims
 
 

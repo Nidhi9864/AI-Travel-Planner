@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from psycopg import errors as pg_errors
+from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +26,15 @@ async def insert_if_absent(session: AsyncSession, user_id: UUID) -> bool:
             return False
         raise
     return True
+
+
+async def mirror_auth_user(session: AsyncSession, user_id: UUID) -> None:
+    """Insert the auth.users row of ``user_id`` on a stub database (A1 §5.1). The id only: the
+    e-mail claim is never stored (NFR-020)."""
+    await session.execute(
+        text("insert into auth.users (id) values (:user_id) on conflict (id) do nothing"),
+        {"user_id": user_id},
+    )
 
 
 async def get(session: AsyncSession, user_id: UUID) -> ProfileRow | None:
