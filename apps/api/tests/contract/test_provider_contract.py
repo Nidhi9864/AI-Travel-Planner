@@ -1,8 +1,8 @@
 """Provider contract suite (§8.19; IMP-110 skeleton: TC-001, TC-158; NFR-043).
 
 Every adapter must pass the same tests. Each entry of ``ADAPTERS`` builds a fresh provider, plus
-one that raises a given shared error. Until IMP-207 adds the MOCK adapter, the suite runs against
-the in-test double, so ``make test-contract`` exercises the contract from the first sprint.
+one that raises a given shared error. The in-test double stays registered next to the MOCK adapter
+(IMP-207), so the suite keeps checking its own expectations.
 
 Adapters join by adding one entry:
 - IMP-207: ``mock`` (``app.ai.providers.mock.MockProvider``, scenarios and ``raise_error``);
@@ -12,6 +12,7 @@ Adapters join by adding one entry:
 
 import asyncio
 import inspect
+import socket
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -29,6 +30,8 @@ from app.ai.errors import (
     ProviderUnavailable,
 )
 from app.ai.providers.base import ModelProvider
+from app.ai.providers.mock import MockProvider
+from app.core.config import MockScenario
 from app.schemas.ai import (
     HealthStatus,
     ItineraryOutput,
@@ -46,7 +49,10 @@ class Adapter:
 
 ADAPTERS: dict[str, Adapter] = {
     "double": Adapter(build=DoubleProvider, failing=lambda error: DoubleProvider(error)),
-    # IMP-207: "mock": Adapter(build=MockProvider, failing=lambda e: MockProvider(raise_error=e)),
+    "mock": Adapter(
+        build=lambda: MockProvider("ok", app_env="test"),
+        failing=lambda error: MockProvider("ok", app_env="test", raise_error=error),
+    ),
     # IMP-301: "gemini_recorded": Adapter(...),
 }
 
@@ -119,3 +125,34 @@ def test_failures_surface_as_the_shared_error_types(adapter: Adapter, error: Pro
     with pytest.raises(type(error)) as raised:
         asyncio.run(adapter.failing(error).generate_itinerary(sample_request()))
     assert raised.value.failure_reason == error.failure_reason
+
+
+def test_tc_162_generate_itinerary_makes_no_network_call(
+    adapter: Adapter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def refuse(*args: object, **kwargs: object) -> None:
+        raise AssertionError("an adapter opened a network connection")
+
+    monkeypatch.setattr(socket.socket, "connect", refuse)
+    monkeypatch.setattr(socket.socket, "connect_ex", refuse)
+    monkeypatch.setattr(socket, "getaddrinfo", refuse)
+    result = asyncio.run(adapter.build().generate_itinerary(sample_request()))
+    assert result.output.days
+
+
+# MOCK_PROVIDER_SCENARIO (IMD-27): each failure scenario raises the matching shared error.
+MOCK_FAILURE_SCENARIOS: dict[MockScenario, type[ProviderError]] = {
+    "timeout": ProviderTimeout,
+    "rate_limited": ProviderRateLimited,
+    "quota": ProviderQuotaExhausted,
+    "invalid_json": ProviderInvalidOutput,
+}
+
+
+@pytest.mark.parametrize("scenario", sorted(MOCK_FAILURE_SCENARIOS))
+def test_tc_163_mock_failure_scenarios_raise_the_shared_error(scenario: MockScenario) -> None:
+    expected = MOCK_FAILURE_SCENARIOS[scenario]
+    provider = MockProvider(scenario, app_env="test")
+    with pytest.raises(expected) as raised:
+        asyncio.run(provider.generate_itinerary(sample_request()))
+    assert raised.value.failure_reason == expected.failure_reason
