@@ -1,11 +1,12 @@
 # Local services (IMP-105, specification §4.1 and §4.7, IMD-03).
-#   db  - plain PostgreSQL 16 for the backend test suites (TEST_DATABASE_URL); started by make db-up.
+#   db  - PostgreSQL 16 with pgvector (IMP-311, IMD-115) for the backend test suites
+#         (TEST_DATABASE_URL); started by make db-up.
 #   api - the production API image for the local container smoke (IMP-112). It sits behind the
 #         "api" profile and its env file is optional, so make db-up works on a fresh clone with no
 #         apps/api/Dockerfile and no apps/api/.env. Start it by name: docker compose up --build api
 services:
   db:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

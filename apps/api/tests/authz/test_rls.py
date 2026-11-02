@@ -1,10 +1,11 @@
 """TC-345: browser roles read zero rows from every public table (US-008 AC2, NFR-012; IMP-106).
 
-One row is written to each of the 15 MVP tables through the ORM models, inside the test's
-rolled-back transaction, so every table has something to read. Then, for roles ``anon`` and
-``authenticated`` (the latter with the row owner's id as ``auth.uid()``), each table in schema
-public, ``alembic_version`` included, must give zero readable rows. Migration 0005 revokes every
-table privilege (§5.4 Lock 3), so a read is refused; a refused read counts as zero rows.
+One row is written to each of the 15 MVP tables and the 2 RAG tables (migration 0007) through
+the ORM models, inside the test's rolled-back transaction, so every table has something to read.
+Then, for roles ``anon`` and ``authenticated`` (the latter with the row owner's id as
+``auth.uid()``), each table in schema public, ``alembic_version`` included, must give zero readable
+rows. Migration 0005 revokes every table privilege (§5.4 Lock 3), so a read is refused; a refused
+read counts as zero rows.
 """
 
 import uuid
@@ -31,6 +32,8 @@ from app.db.models import (
     Place,
     PlaceOpeningHours,
     Profile,
+    RagChunk,
+    RagDocument,
     RouteCache,
     Trip,
     TripPlace,
@@ -49,6 +52,7 @@ PLACE_B_ID = uuid.UUID("00000000-0000-4000-8000-000000000004")
 TRIP_ID = uuid.UUID("00000000-0000-4000-8000-000000000005")
 GENERATION_ID = uuid.UUID("00000000-0000-4000-8000-000000000006")
 DAY_ID = uuid.UUID("00000000-0000-4000-8000-000000000007")
+RAG_DOCUMENT_ID = uuid.UUID("00000000-0000-4000-8000-000000000008")
 
 
 async def _insert(session: AsyncSession, row: Base) -> None:
@@ -176,6 +180,28 @@ async def _write_one_row_per_table(session: AsyncSession) -> None:
             distance_m=400,
             travel_source="fallback_estimate",
             expires_at=datetime.now(UTC) + timedelta(days=30),
+        ),
+    )
+    await _insert(
+        session,
+        RagDocument(
+            id=RAG_DOCUMENT_ID,
+            destination_id=DESTINATION_ID,
+            kind="guide",
+            source_id=SOURCE_ID,
+            doc_key="guide:rls-check/sample",
+            title="RLS check guide (SAMPLE)",
+            content_sha256="0" * 64,
+        ),
+    )
+    await _insert(
+        session,
+        RagChunk(
+            document_id=RAG_DOCUMENT_ID,
+            chunk_index=0,
+            content="SAMPLE chunk.",
+            content_sha256="0" * 64,
+            token_estimate=3,
         ),
     )
 

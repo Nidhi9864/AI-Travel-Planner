@@ -18,6 +18,8 @@ dependencies = [
     "httpx>=0.28,<0.29",
     "PyJWT[crypto]>=2.15,<3",
     "google-genai>=2.34,<3",
+    # IMD-115: the Vector(768) column type of rag_chunks.embedding (migration 0007).
+    "pgvector>=0.5,<0.6",
 ]
 
 [project.optional-dependencies]

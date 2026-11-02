@@ -34,6 +34,9 @@ MVP_TABLES = {
     "itinerary_versions",
     "route_cache",
 }
+# The RAG store of migration 0007 (Amendment A1 §5.3).
+RAG_TABLES = {"rag_documents", "rag_chunks"}
+SCHEMA_TABLES = MVP_TABLES | RAG_TABLES
 DIALECT = postgresql.dialect()
 
 
@@ -82,11 +85,11 @@ def _type(type_: Any) -> str:
 
 def test_schema_drift_tables(inspector: Inspector) -> None:
     migrated = set(inspector.get_table_names(schema="public")) - {"alembic_version"}
-    assert set(metadata.tables) == MVP_TABLES
-    assert migrated == MVP_TABLES
+    assert set(metadata.tables) == SCHEMA_TABLES
+    assert migrated == SCHEMA_TABLES
 
 
-@pytest.mark.parametrize("table_name", sorted(MVP_TABLES))
+@pytest.mark.parametrize("table_name", sorted(SCHEMA_TABLES))
 def test_schema_drift_columns(inspector: Inspector, table_name: str) -> None:
     table = metadata.tables[table_name]
     reflected = {c["name"]: c for c in inspector.get_columns(table_name, schema="public")}
@@ -124,7 +127,7 @@ def test_schema_drift_columns(inspector: Inspector, table_name: str) -> None:
     assert not problems, "\n".join(problems)
 
 
-@pytest.mark.parametrize("table_name", sorted(MVP_TABLES))
+@pytest.mark.parametrize("table_name", sorted(SCHEMA_TABLES))
 def test_schema_drift_keys(inspector: Inspector, table_name: str) -> None:
     table = metadata.tables[table_name]
 

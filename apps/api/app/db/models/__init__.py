@@ -1,4 +1,5 @@
-"""ORM models of the 15 MVP tables, one file per owning module (§5.2), and their metadata.
+"""ORM models of the 15 MVP tables and the 2 RAG tables (migration 0007), one file per owning
+module (§5.2), and their metadata.
 
 The SQL migrations are the schema (IMD-01); these classes mirror them for queries only, and
 ``tests/api/test_schema_drift.py`` fails on any difference. Importing this package registers every
@@ -18,6 +19,7 @@ from app.db.models.itinerary import (
 )
 from app.db.models.places import DataSource, Destination, Place, PlaceOpeningHours, TripPlace
 from app.db.models.profiles import Profile
+from app.db.models.rag import RagChunk, RagDocument
 from app.db.models.routing import RouteCache
 from app.db.models.trips import Trip, TripPreferences
 
@@ -36,6 +38,8 @@ __all__ = [
     "Place",
     "PlaceOpeningHours",
     "Profile",
+    "RagChunk",
+    "RagDocument",
     "RouteCache",
     "Trip",
     "TripPlace",

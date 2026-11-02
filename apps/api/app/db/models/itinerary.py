@@ -6,6 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import (
+    ARRAY,
     CHAR,
     Boolean,
     Date,
@@ -85,6 +86,10 @@ class ItineraryItem(Base):
     travel_from_prev_m: Mapped[int | None] = mapped_column(Integer)
     travel_mode: Mapped[str | None] = mapped_column(Text)
     travel_source: Mapped[str | None] = mapped_column(Text)
+    # Citations of the item (migration 0007, A1 §5.3): at most three rag_chunks ids.
+    source_chunk_ids: Mapped[list[uuid.UUID]] = mapped_column(
+        ARRAY(UUID(as_uuid=True)), server_default=text("'{}'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )

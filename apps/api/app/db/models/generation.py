@@ -1,4 +1,4 @@
-"""Generation records, written by MOD-B06 (migration 0004, Appendix A.5)."""
+"""Generation records, written by MOD-B06 (migration 0004, Appendix A.5; retrieval columns 0007)."""
 
 import uuid
 from datetime import datetime
@@ -60,3 +60,7 @@ class AiGeneration(Base):
     retention_until: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now() + '90 days'::interval")
     )
+    # Retrieval record (migration 0007, A1 §5.3); null until IMP-316.
+    retrieval_mode: Mapped[str | None] = mapped_column(Text)
+    embedding_model_id: Mapped[str | None] = mapped_column(Text)
+    retrieval_ms: Mapped[int | None] = mapped_column(Integer)
