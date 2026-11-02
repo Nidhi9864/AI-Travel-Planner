@@ -12,6 +12,27 @@ This file holds anonymised notes only. It must never contain:
 - workplaces or schools;
 - any other detail that identifies an interviewee (guide section 6).
 
+## Session log
+
+One row per interview, numbered 1 to 5 in the order held (US-151 AC1). Record the stakeholder role from guide section 3, never the person.
+
+- **Notes:** anonymised, following guide section 6. Each point is marked as a need, a problem or an out-of-scope wish, with the question number it answers.
+- **No consent:** if consent was not given, the row says so and holds no notes.
+
+| Interview | Date (YYYY-MM-DD) | Stakeholder role | Consent given (yes/no) | Recording allowed (yes/no) | Interviewer | Anonymised notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID |
+| 2 | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID |
+| 3 | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID |
+| 4 | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID |
+| 5 | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID | TO BE FILLED BY JUNAID |
+
+The "Interviewer" column names a team member, never the interviewee. Longer notes may go in a sub-section per interview below the table, headed "Interview <number>". The same anonymisation rules apply there.
+
+**Recordings and transcripts:** none are stored in the repository. Any recording is deleted once its notes are written (guide section 6). Recordings deleted (yes/no, or "none made"): TO BE FILLED BY JUNAID
+
+**Supervisor review** (the card's test: "Review by Junaid and the supervisor"): date TO BE FILLED BY JUNAID · outcome TO BE FILLED BY JUNAID · changes requested TO BE FILLED BY JUNAID
+
 ## Findings summary
 
 One row per finding, written after all five interviews. A finding is a need, problem or expectation that the notes support. Cite the interview numbers it comes from and the §2 FR IDs it concerns, exactly as they appear in the specification.
