@@ -93,6 +93,10 @@ async def test_inventory_public_routes_answer_without_a_token() -> None:
                 # IMD-37: a declared, unbuilt route (API-02 until IMP-201) is skipped by this suite.
                 assert response.json()["error"]["code"] == "NOT_IMPLEMENTED", f"{method} {path}"
                 continue
+            if path == "/health/ready" and response.status_code == 503:
+                # §6 API-02: this app has no database, so readiness answers 503 not_ready.
+                assert response.json()["checks"]["database"] == "down"
+                continue
             assert response.status_code == 200, f"{method} {path}"
 
 

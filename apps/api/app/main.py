@@ -22,6 +22,7 @@ from app.budget.router import router as budget_router
 from app.core.config import ConfigError, Settings, check_settings, get_settings
 from app.core.errors import register_error_handlers
 from app.core.health import router as health_router
+from app.core.logging import configure_logging
 from app.core.request_id import REQUEST_ID_HEADER, RequestIdMiddleware
 from app.generation.router import router as generation_router
 from app.itinerary.router import router as itinerary_router
@@ -102,5 +103,6 @@ def __getattr__(name: str) -> FastAPI:
         application = create_app()
     except ConfigError as exc:
         sys.exit(f"configuration error: {exc}")
+    configure_logging(application.state.settings.log_level)  # JSON lines on stdout (IMP-201)
     globals()["app"] = application
     return application

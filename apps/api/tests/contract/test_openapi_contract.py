@@ -7,12 +7,14 @@ the A1 fields (SourceRef, Item.sources, the GenerationOut retrieval fields, IMD-
 
 import json
 import re
+import uuid
 from pathlib import Path
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
+from app.auth.deps import current_user
 from app.core.config import Settings
 from app.main import create_app
 from app.openapi_export import CONTRACT_FILE, openapi_document, render
@@ -149,10 +151,12 @@ def test_ai_schemas_are_exported_with_the_contract() -> None:
 def test_declared_route_answers_501_with_the_envelope(
     clean_settings_env: pytest.MonkeyPatch,
 ) -> None:
-    # API-02 is public, so it shows the IMD-37 stub without a token or a database.
+    # API-33 is an IMD-37 stub until IMP-308; the token check is overridden, so no database.
     settings = Settings(
         app_env="test", ai_provider="MOCK", database_url="postgresql+psycopg://t@db.invalid/t"
     )
-    response = TestClient(create_app(settings)).get("/health/ready")
+    app = create_app(settings)
+    app.dependency_overrides[current_user] = lambda: None
+    response = TestClient(app).get(f"{V1}/trips/{uuid.uuid4()}/costs")
     assert response.status_code == 501
     assert response.json()["error"]["code"] == "NOT_IMPLEMENTED"

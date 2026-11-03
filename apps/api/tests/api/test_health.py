@@ -1,12 +1,25 @@
-"""API-01 GET /health, the 404 envelope and CORS (IMP-103; TC-288, TC-044, TC-351)."""
+"""API-01 GET /health, the 404 envelope and CORS (IMP-103; TC-288, TC-044, TC-351).
+
+API-02 GET /health/ready against the migrated test database and a closed port (IMP-201; TC-289).
+"""
 
 import uuid
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 import pytest
+from alembic.script import ScriptDirectory
 from fastapi.testclient import TestClient
 
+from app.ai.factory import get_provider
+from app.core import health
 from app.core.config import Settings
 from app.main import create_app
+from app.schemas.ai import HealthStatus
+
+MIGRATIONS = Path(__file__).resolve().parents[2] / "migrations"
+CLOSED_PORT_URL = "postgresql+psycopg://ready-user:ready-db-secret@127.0.0.1:9/nowhere"
 
 ALLOWED_ORIGIN = "http://localhost:3000"
 # Fake values: the test asserts that none of them is returned.
@@ -123,3 +136,106 @@ def test_health_docs_are_disabled_in_production(clean_settings_env: pytest.Monke
     assert production.get("/docs").status_code == 404
     assert production.get("/openapi.json").status_code == 404
     assert production.get("/health").json()["environment"] == "production"
+
+
+# ---------- API-02 GET /health/ready (IMP-201) ----------
+
+
+def ready_client(database_url: str, **overrides: Any) -> TestClient:
+    values: dict[str, Any] = {
+        "app_env": "test",
+        "ai_provider": "MOCK",
+        "build_version": "test-build",
+        "database_url": database_url,
+        **overrides,
+    }
+    return TestClient(create_app(Settings(**values)))
+
+
+def test_health_ready_migration_head_matches_the_migrations() -> None:
+    # The image has no migrations folder, so the head is a constant; a new migration updates it.
+    head = ScriptDirectory(str(MIGRATIONS)).get_current_head()
+    assert head == health.MIGRATION_HEAD
+
+
+def test_health_ready_with_a_migrated_database(
+    clean_settings_env: pytest.MonkeyPatch, migrated_database_url: str
+) -> None:
+    client = ready_client(migrated_database_url)
+    response = client.get("/health/ready")
+    assert response.status_code == 200
+    model_id = get_provider(client.app.state.settings).get_model_metadata().model_id
+    assert response.json() == {
+        "status": "ready",
+        "version": "test-build",
+        "checks": {
+            "database": "ok",
+            "migration": health.MIGRATION_HEAD,
+            "provider": {"name": "MOCK", "model_id": model_id, "status": "ok"},
+        },
+    }
+
+
+# TC-289: the database unreachable -> 503 not_ready naming the database; no secret in the body.
+def test_health_ready_database_down_is_503_not_ready(
+    clean_settings_env: pytest.MonkeyPatch,
+) -> None:
+    response = ready_client(CLOSED_PORT_URL).get("/health/ready")
+    assert response.status_code == 503
+    body = response.json()
+    assert body["status"] == "not_ready"
+    assert body["checks"]["database"] == "down"
+    assert body["checks"]["migration"] == "behind"
+    assert body["checks"]["provider"]["status"] == "ok"
+    assert "ready-db-secret" not in response.text
+    assert "127.0.0.1" not in response.text
+
+
+# PD-12, FR-044 AC2: a provider that is down degrades readiness but is not a 503.
+def test_health_ready_provider_down_is_200_degraded(
+    clean_settings_env: pytest.MonkeyPatch, migrated_database_url: str
+) -> None:
+    client = ready_client(migrated_database_url, ai_provider="GEMINI", gemini_model_id="m-test")
+    response = client.get("/health/ready")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "degraded"
+    assert body["checks"]["database"] == "ok"
+    assert body["checks"]["provider"] == {"name": "GEMINI", "model_id": "m-test", "status": "down"}
+
+
+def test_health_ready_database_behind_the_head_is_degraded(
+    clean_settings_env: pytest.MonkeyPatch, migrated_database_url: str
+) -> None:
+    clean_settings_env.setattr(health, "MIGRATION_HEAD", "9999")
+    response = ready_client(migrated_database_url).get("/health/ready")
+    assert response.status_code == 200
+    assert response.json()["status"] == "degraded"
+    assert response.json()["checks"]["migration"] == "behind"
+
+
+def test_health_ready_caches_the_provider_check(
+    clean_settings_env: pytest.MonkeyPatch, migrated_database_url: str
+) -> None:
+    client = ready_client(migrated_database_url)
+    provider = get_provider(client.app.state.settings)
+    calls = []
+
+    async def counting_health_check() -> HealthStatus:
+        calls.append(1)
+        return HealthStatus(status="ok", detail=None, checked_at=datetime.now(UTC))
+
+    clean_settings_env.setattr(provider, "health_check", counting_health_check)
+    client.app.state.model_provider = provider
+    for _ in range(3):
+        assert client.get("/health/ready").status_code == 200
+    assert len(calls) == 1  # cached for PROVIDER_CACHE_S
+
+
+# TC-342: readiness answers carry the request ID, and a client UUID is echoed.
+def test_health_ready_echoes_a_client_request_id(clean_settings_env: pytest.MonkeyPatch) -> None:
+    request_id = str(uuid.uuid4())
+    response = ready_client(CLOSED_PORT_URL).get(
+        "/health/ready", headers={"X-Request-ID": request_id}
+    )
+    assert response.headers["X-Request-ID"] == request_id
