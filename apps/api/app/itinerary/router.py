@@ -1,17 +1,19 @@
 """Itinerary, edit and version routes API-09, API-24 to API-29, API-32 and API-35 to API-38
 (specification §6.6.5; IMD-18, IMD-23).
 
-Declared with their final shapes; each answers 501 NOT_IMPLEMENTED until its card builds it
-(IMD-37): IMP-211 (API-09, API-24), IMP-408 (API-26, API-27), IMP-504 (API-25), IMP-505 (API-28,
-API-29), IMP-405 (API-32), IMP-609 (API-35), IMP-610 (API-36 to API-38). API-30 and API-31 live in
-generation/router.py (IMD-13).
+API-09 and API-24 are built (IMP-211). The others are declared with their final shapes and answer
+501 NOT_IMPLEMENTED until their cards build them (IMD-37): IMP-408 (API-26, API-27), IMP-504
+(API-25), IMP-505 (API-28, API-29), IMP-405 (API-32), IMP-609 (API-35), IMP-610 (API-36 to API-38).
+API-30 and API-31 live in generation/router.py (IMD-13).
 """
 
 from uuid import UUID
 
 from fastapi import APIRouter, status
 
+from app.auth.deps import CurrentUser, DbSession
 from app.core.errors import EndpointNotImplemented
+from app.itinerary import service
 from app.itinerary.schemas import (
     AlternativesOut,
     EditResultOut,
@@ -35,8 +37,8 @@ router = APIRouter(tags=["itinerary"])
     response_model=LatestItineraryOut,
     summary="API-09 Find my most recently changed itinerary",
 )
-async def latest_itinerary() -> LatestItineraryOut:
-    raise EndpointNotImplemented()
+async def latest_itinerary(user: CurrentUser, session: DbSession) -> LatestItineraryOut:
+    return await service.latest_itinerary(session, user.user_id)
 
 
 @router.get(
@@ -44,8 +46,10 @@ async def latest_itinerary() -> LatestItineraryOut:
     response_model=ItineraryOut,
     summary="API-24 Read my trip's itinerary",
 )
-async def get_itinerary(trip_id: UUID, version_id: UUID | None = None) -> ItineraryOut:
-    raise EndpointNotImplemented()
+async def get_itinerary(
+    trip_id: UUID, user: CurrentUser, session: DbSession, version_id: UUID | None = None
+) -> ItineraryOut:
+    return await service.get_itinerary(session, user.user_id, trip_id, version_id)
 
 
 @router.post(

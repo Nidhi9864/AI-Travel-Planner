@@ -1,22 +1,26 @@
 """The itinerary tables (migration 0004): itinerary_days, itinerary_items, itinerary_warnings and
 itinerary_versions, plus trips.plan_revision (§5.2), written only by MOD-B08 (§3). Every function
-takes the caller's session and opens no transaction of its own. budget_settings is only read.
+takes the caller's session and opens no transaction of its own. budget_settings, places,
+trip_places and ai_generations are only read.
 """
 
-from datetime import date, time, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, exists, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import (
+    AiGeneration,
     BudgetSettings,
     ItineraryDay,
     ItineraryItem,
     ItineraryVersion,
     ItineraryWarning,
+    Place,
     Trip,
+    TripPlace,
 )
 from app.schemas.ai import ItineraryOutput
 
@@ -165,3 +169,68 @@ async def version_for_generation(
         .limit(1)
     )
     return await session.scalar(query)
+
+
+async def plan_days(session: AsyncSession, trip_id: UUID) -> list[ItineraryDay]:
+    query = (
+        select(ItineraryDay)
+        .where(ItineraryDay.trip_id == trip_id)
+        .order_by(ItineraryDay.day_number)
+    )
+    return list(await session.scalars(query))
+
+
+async def plan_items(
+    session: AsyncSession, trip_id: UUID
+) -> list[tuple[ItineraryItem, Place, bool]]:
+    """Every item of the trip with its place and must-visit flag, in day and position order."""
+    must_visit = exists().where(
+        TripPlace.trip_id == ItineraryItem.trip_id,
+        TripPlace.place_id == ItineraryItem.place_id,
+        TripPlace.relation == "must_visit",
+    )
+    query = (
+        select(ItineraryItem, Place, must_visit)
+        .join(Place, Place.id == ItineraryItem.place_id)
+        .join(ItineraryDay, ItineraryDay.id == ItineraryItem.day_id)
+        .where(ItineraryItem.trip_id == trip_id)
+        .order_by(ItineraryDay.day_number, ItineraryItem.position)
+    )
+    return [(item, place, bool(flag)) for item, place, flag in await session.execute(query)]
+
+
+async def latest_version_id(session: AsyncSession, trip_id: UUID) -> UUID | None:
+    query = (
+        select(ItineraryVersion.id)
+        .where(ItineraryVersion.trip_id == trip_id)
+        .order_by(ItineraryVersion.version_no.desc())
+        .limit(1)
+    )
+    return await session.scalar(query)
+
+
+async def latest_completed_generation(session: AsyncSession, trip_id: UUID) -> AiGeneration | None:
+    query = (
+        select(AiGeneration)
+        .where(AiGeneration.trip_id == trip_id, AiGeneration.status == "completed")
+        .order_by(AiGeneration.completed_at.desc().nulls_last(), AiGeneration.created_at.desc())
+        .limit(1)
+    )
+    return await session.scalar(query)
+
+
+async def latest_itinerary_for_user(
+    session: AsyncSession, user_id: UUID
+) -> tuple[UUID, int, datetime] | None:
+    """The caller's trip whose itinerary changed most recently (latest version created_at)."""
+    changed = func.max(ItineraryVersion.created_at)
+    query = (
+        select(Trip.id, Trip.plan_revision, changed)
+        .join(ItineraryVersion, ItineraryVersion.trip_id == Trip.id)
+        .where(Trip.user_id == user_id, Trip.deleted_at.is_(None))
+        .group_by(Trip.id, Trip.plan_revision)
+        .order_by(changed.desc(), Trip.id)
+        .limit(1)
+    )
+    row = (await session.execute(query)).first()
+    return None if row is None else (row[0], row[1], row[2])
