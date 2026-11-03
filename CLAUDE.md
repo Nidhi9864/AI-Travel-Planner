@@ -112,6 +112,7 @@ Adding a dependency needs a reason in the pull request; adding a framework, serv
 - Rewriting working modules that the task does not name; large refactors without a task.
 - Adding LangChain, LlamaIndex or any other LLM or RAG framework, or a separate vector database service (IMD-105).
 - Putting a secret in an image, a workflow file, `infra/aws/` or a task definition's plain environment (IMD-102).
+- Committing screen-draft files as they are, connecting a drafting tool to this repository, or adding a draft's dependencies without a reason; drafts are look-and-layout references that the screen part's run ports into `apps/web` (IMD-117, `docs/guides/screen-drafts.md`).
 
 ## 11. Definition of Done for a task part
 
