@@ -6,6 +6,7 @@ resolves the model provider and the prompt template (§8.4, IMP-208); a ConfigEr
 stops start-up.
 """
 
+import asyncio
 import logging
 import os
 import sys
@@ -24,6 +25,7 @@ from app.core.errors import register_error_handlers
 from app.core.health import router as health_router
 from app.core.logging import configure_logging
 from app.core.request_id import REQUEST_ID_HEADER, RequestIdMiddleware
+from app.generation.jobs import reap_forever
 from app.generation.router import router as generation_router
 from app.itinerary.router import router as itinerary_router
 from app.places.router import router as places_router
@@ -51,7 +53,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except ConfigError as exc:
             logger.error("configuration error: %s", exc)
             raise
+        reaper = asyncio.create_task(reap_forever())  # stale generation jobs (§6.4, IMP-210)
         yield
+        reaper.cancel()
 
     # /docs is enabled in local, test and staging; production serves no OpenAPI page (§6.1).
     docs_enabled = settings.app_env != "production"

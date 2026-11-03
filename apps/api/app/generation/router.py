@@ -1,16 +1,20 @@
 """Generation routes API-22, API-23, API-30 and API-31 (specification §6.4, §6.6.4, §6.6.5; IMD-13).
 
-Declared with their final shapes; each answers 501 NOT_IMPLEMENTED until IMP-210 (API-22, API-23)
-and IMP-607 (API-30, API-31) build it (IMD-37). API-22, API-30 and API-31 answer 202 for a new
-generation and 200 when the same request is already active (FR-024 AC3).
+API-22 and API-23 are built (IMP-210); API-30 and API-31 answer 501 NOT_IMPLEMENTED until IMP-607
+builds them (IMD-37). API-22, API-30 and API-31 answer 202 for a new generation and 200 when the
+same request is already active (FR-024 AC3).
 """
 
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Response, status
 
+from app.ai.factory import ModelProviderDep
+from app.auth.deps import CurrentUser, DbSession
 from app.core.errors import EndpointNotImplemented
+from app.generation import service
+from app.generation.jobs import SubmitDep
 from app.generation.schemas import GenerationOut, GenerationStartIn, RegenerateIn
 from app.schemas.ai import DayNumber
 
@@ -28,8 +32,21 @@ _SAME_REQUEST_ACTIVE: dict[int | str, dict[str, Any]] = {
     responses=_SAME_REQUEST_ACTIVE,
     summary="API-22 Start generating my trip's itinerary",
 )
-async def start_generation(trip_id: UUID, body: GenerationStartIn) -> GenerationOut:
-    raise EndpointNotImplemented()
+async def start_generation(
+    trip_id: UUID,
+    body: GenerationStartIn,
+    user: CurrentUser,
+    session: DbSession,
+    provider: ModelProviderDep,
+    submit: SubmitDep,
+    response: Response,
+) -> GenerationOut:
+    out, created = await service.start_generation(
+        session, user.user_id, trip_id, body, provider, submit
+    )
+    if not created:
+        response.status_code = status.HTTP_200_OK
+    return out
 
 
 @router.get(
@@ -37,8 +54,10 @@ async def start_generation(trip_id: UUID, body: GenerationStartIn) -> Generation
     response_model=GenerationOut,
     summary="API-23 Read a generation's status",
 )
-async def get_generation(generation_id: UUID) -> GenerationOut:
-    raise EndpointNotImplemented()
+async def get_generation(
+    generation_id: UUID, user: CurrentUser, session: DbSession
+) -> GenerationOut:
+    return await service.get_generation(session, user.user_id, generation_id)
 
 
 @router.post(

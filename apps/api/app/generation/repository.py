@@ -10,6 +10,7 @@ AC3). ``cost_estimate_usd`` and ``cost_basis`` stay null until a dated cost basi
 """
 
 from collections.abc import Mapping
+from datetime import timedelta
 from typing import Any
 from uuid import UUID
 
@@ -17,7 +18,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import NotFound
-from app.db.models import AiGeneration
+from app.db.models import AiGeneration, BudgetSettings, Trip
 from app.generation import records
 from app.generation.records import (
     CompletedOutcome,
@@ -193,3 +194,46 @@ async def get_for_user(session: AsyncSession, generation_id: UUID, user_id: UUID
     if row is None:
         raise NotFound()
     return row
+
+
+async def fail_stale(
+    session: AsyncSession,
+    max_age: timedelta,
+    *,
+    generation_id: UUID | None = None,
+    validation_summary: Mapping[str, Any] | None = None,
+) -> int:
+    """The reaper (§6.4): active rows older than ``max_age`` become failed with ``internal``.
+
+    ``generation_id`` limits it to one row (API-23); rows locked by a running job are skipped.
+    Returns how many rows it failed.
+    """
+    query = (
+        select(AiGeneration.id)
+        .where(
+            AiGeneration.status.in_(sorted(records.ACTIVE_STATUSES)),
+            AiGeneration.created_at < func.now() - max_age,
+        )
+        .with_for_update(skip_locked=True)
+    )
+    if generation_id is not None:
+        query = query.where(AiGeneration.id == generation_id)
+    stale = list((await session.scalars(query)).all())
+    for stale_id in stale:
+        await fail(session, stale_id, "internal", validation_summary=validation_summary)
+    return len(stale)
+
+
+async def contingency_pct(session: AsyncSession, trip_id: UUID) -> float:
+    """budget_settings.contingency_pct for gr-1 (read only; MOD-B09 writes it), default 10."""
+    value = await session.scalar(
+        select(BudgetSettings.contingency_pct).where(BudgetSettings.trip_id == trip_id)
+    )
+    return 10.0 if value is None else float(value)
+
+
+async def lock_trip(session: AsyncSession, trip_id: UUID, user_id: UUID) -> None:
+    """Lock the caller's trip row so two starts for one trip run one after the other (§5.8)."""
+    await session.execute(
+        select(Trip.id).where(Trip.id == trip_id, Trip.user_id == user_id).with_for_update()
+    )
